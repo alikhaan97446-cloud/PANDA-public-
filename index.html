@@ -987,18 +987,67 @@ function deleteById() {
 
 // ═══ TOLOV ═══
 function openTov(id, mode) {
+  var o = orders.find(function(x){return String(x.id)===String(id);});
+  if (!o) return;
   document.getElementById('tov-id').value = id;
   document.getElementById('tov-mode').value = mode || 'full';
-  document.getElementById('tov-type').value = 'Naqd';
-  document.querySelectorAll('.tc-chip').forEach(function(c,i){c.classList.remove('on'); if(i===0)c.classList.add('on');});
   document.getElementById('tov-title').textContent = mode==='diag' ? 'Diagnostika tolovi' : 'Tolov usuli';
+  
+  var jami = mode==='diag' ? (o.diagP||diagP) : o.jami;
+  document.getElementById('tov-jami-show').textContent = fmt(jami) + ' som';
+  
+  // Reset inputs
+  ['tov-naqd','tov-payme','tov-click','tov-terminal'].forEach(function(id2){
+    document.getElementById(id2).value = '';
+  });
+  
   var info = document.getElementById('tov-info');
   if (mode === 'diag') {
-    var o = orders.find(function(x){return String(x.id)===String(id);});
     info.style.display = 'block';
-    info.textContent = 'Faqat diagnostika: ' + fmt(o ? o.diagP : diagP) + ' som';
-  } else { info.style.display = 'none'; }
+    info.textContent = 'Faqat diagnostika: ' + fmt(jami) + ' som';
+  } else { 
+    info.style.display = 'none'; 
+  }
+  
+  calcTovLeft();
   document.getElementById('tov-ov').classList.add('on');
+}
+
+function calcTovLeft() {
+  var id = document.getElementById('tov-id').value;
+  var mode = document.getElementById('tov-mode').value;
+  var o = orders.find(function(x){return String(x.id)===String(id);});
+  if (!o) return;
+  
+  var jami = mode==='diag' ? (o.diagP||diagP) : o.jami;
+  var naqd = +document.getElementById('tov-naqd').value||0;
+  var payme = +document.getElementById('tov-payme').value||0;
+  var click = +document.getElementById('tov-click').value||0;
+  var terminal = +document.getElementById('tov-terminal').value||0;
+  var kiritildi = naqd + payme + click + terminal;
+  var qoldiq = jami - kiritildi;
+  
+  var qoldiqEl = document.getElementById('tov-qoldiq');
+  var qoldiqVal = document.getElementById('tov-qoldiq-val');
+  var btn = document.getElementById('tov-confirm-btn');
+  
+  if (qoldiq > 0) {
+    qoldiqEl.style.display = 'flex';
+    qoldiqVal.textContent = fmt(qoldiq) + ' som';
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+  } else if (qoldiq < 0) {
+    qoldiqEl.style.display = 'flex';
+    qoldiqVal.textContent = 'Ortiqcha: ' + fmt(Math.abs(qoldiq)) + ' som';
+    qoldiqEl.style.background = '#FFEBEE';
+    qoldiqVal.style.color = 'var(--red)';
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+  } else {
+    qoldiqEl.style.display = 'none';
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+  }
 }
 function closeTov() { document.getElementById('tov-ov').classList.remove('on'); }
 function pickTov(el, type) {
