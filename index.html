@@ -625,13 +625,7 @@ function updateLockDots() {
 }
 
 function getCodes() {
-  var stored = localStorage.getItem('panda_codes');
-  if (stored) {
-    var c = JSON.parse(stored);
-    if (!c.ad) c.ad = '1111';
-    return c;
-  }
-  return {ad:'1111', op:'0000', rh:'0000'};
+  return {ad:'1234', op:'0987', rh:'4044'};
 }
 
 function checkLock() {
@@ -1275,15 +1269,7 @@ function updateDiagShow() {
   if(el) el.textContent = fmt(diagP) + ' som';
 }
 function saveCodes() {
-  var ad = document.getElementById('ad-code').value.trim();
-  var op = document.getElementById('op-code').value.trim();
-  var rh = document.getElementById('rh-code').value.trim();
-  if(ad.length!==4||op.length!==4||rh.length!==4) { toast('Barcha kodlar 4 ta raqam bolishi kerak!'); return; }
-  localStorage.setItem('panda_codes', JSON.stringify({ad:ad, op:op, rh:rh}));
-  document.getElementById('ad-code').value='';
-  document.getElementById('op-code').value='';
-  document.getElementById('rh-code').value='';
-  toast('Kodlar saqlandi!');
+  toast('Kodlarni ozgartirish uchun dasturchi bilan boglanin!');
 }
 
 // ═══ UTILS ═══
