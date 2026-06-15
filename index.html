@@ -1047,47 +1047,42 @@ function calcTovLeft() {
   if (!o) return;
   
   var jami = mode==='diag' ? (o.diagP||diagP) : o.jami;
-  var naqdEl = document.getElementById('tov-naqd');
-  var paymeEl = document.getElementById('tov-payme');
-  var clickEl = document.getElementById('tov-click');
-  var terminalEl = document.getElementById('tov-terminal');
-  
-  var naqd = naqdEl && naqdEl.value !== '' ? +naqdEl.value : 0;
-  var payme = paymeEl && paymeEl.value !== '' ? +paymeEl.value : 0;
-  var click2 = clickEl && clickEl.value !== '' ? +clickEl.value : 0;
-  var terminal = terminalEl && terminalEl.value !== '' ? +terminalEl.value : 0;
+  var naqd = +(document.getElementById('tov-naqd')||{value:0}).value||0;
+  var payme = +(document.getElementById('tov-payme')||{value:0}).value||0;
+  var click2 = +(document.getElementById('tov-click')||{value:0}).value||0;
+  var terminal = +(document.getElementById('tov-terminal')||{value:0}).value||0;
   var kiritildi = naqd + payme + click2 + terminal;
   var qoldiq = jami - kiritildi;
   
   var qoldiqEl = document.getElementById('tov-qoldiq');
   var qoldiqVal = document.getElementById('tov-qoldiq-val');
   var btn = document.getElementById('tov-confirm-btn');
+  if (!btn) return;
   
-  if (!qoldiqEl || !btn) return;
-  
-  if (kiritildi === 0) {
-    qoldiqEl.style.display = 'none';
-    btn.style.opacity = '0.5';
-    btn.style.cursor = 'not-allowed';
+  if (qoldiq === 0 && kiritildi > 0) {
+    if(qoldiqEl) qoldiqEl.style.display = 'none';
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
   } else if (qoldiq > 0) {
-    qoldiqEl.style.display = 'flex';
-    qoldiqEl.style.background = '#FFF8E1';
-    qoldiqVal.style.color = '#E65100';
-    qoldiqVal.textContent = 'Qoldiq: ' + fmt(qoldiq) + ' som';
+    if(qoldiqEl){
+      qoldiqEl.style.display = 'flex';
+      qoldiqEl.style.background = '#FFF8E1';
+      if(qoldiqVal){qoldiqVal.style.color='#E65100';qoldiqVal.textContent='Qoldiq: '+fmt(qoldiq)+' som';}
+    }
     btn.style.opacity = '0.5';
     btn.style.cursor = 'not-allowed';
   } else if (qoldiq < 0) {
-    qoldiqEl.style.display = 'flex';
-    qoldiqEl.style.background = '#FFEBEE';
-    qoldiqVal.style.color = 'var(--red)';
-    qoldiqVal.textContent = 'Ortiqcha: ' + fmt(Math.abs(qoldiq)) + ' som';
+    if(qoldiqEl){
+      qoldiqEl.style.display = 'flex';
+      qoldiqEl.style.background = '#FFEBEE';
+      if(qoldiqVal){qoldiqVal.style.color='var(--red)';qoldiqVal.textContent='Ortiqcha: '+fmt(Math.abs(qoldiq))+' som';}
+    }
     btn.style.opacity = '0.5';
     btn.style.cursor = 'not-allowed';
   } else {
-    qoldiqEl.style.display = 'none';
-    btn.style.opacity = '1';
-    btn.style.cursor = 'pointer';
-    btn.style.background = 'linear-gradient(120deg,#007A2F,#00C853)';
+    if(qoldiqEl) qoldiqEl.style.display = 'none';
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
   }
 }
 function closeTov() { document.getElementById('tov-ov').classList.remove('on'); }
