@@ -616,6 +616,17 @@ window.onload = function() {
   document.getElementById('dp').value = diagP;
   updateDiagShow();
   renderXgrid();
+  
+  // Klaviaturadan PIN terish
+  document.addEventListener('keydown', function(e) {
+    var lock = document.getElementById('lock');
+    if (!lock || !lock.classList.contains('on')) return;
+    if (e.key >= '0' && e.key <= '9') {
+      lockPress(e.key);
+    } else if (e.key === 'Backspace') {
+      lockDel();
+    }
+  });
 };
 
 // ═══ LOCK SCREEN ═══
@@ -786,17 +797,16 @@ function submitO() {
   var isOp = currentRole === 'operator' || currentRole === 'rahbar';
   var allX = isOp ? selX.map(function(i){return {name:xizmatlar[i].name,price:xizmatlar[i].price};}).concat(custX.filter(function(x){return x.name;}).map(function(x){return {name:x.name,price:x.price||0};})) : [];
 
-  if (isOp && !allX.length) { toast('Kamida 1 xizmat tanlang!'); return; }
+
 
   var xT = allX.reduce(function(s,x){return s+x.price;},0);
-  var hasDiag = ['Diagnostika','Kelishildi','Jarayonda','Yakun','Tolandi','BekorTolandi'].indexOf(status) > -1;
   var order = {
     id: 'EV-' + String(orders.length+1).padStart(4,'0'),
     sana: new Date().toLocaleString('uz-UZ'),
     ismi: ismi, tel: tel, mashina: mashina, raqam: raqam, muammo: muammo,
     xizmatlar: allX, xStr: allX.map(function(x){return x.name;}).join(', '),
-    hasDiag: hasDiag, diagP: hasDiag ? diagP : 0,
-    xT: xT, jami: xT + (hasDiag ? diagP : 0),
+    hasDiag: false, diagP: 0,
+    xT: xT, jami: xT,
     status: status, tolov: '', nakType: 'full',
     ts: Date.now(),
     hist: [{s: status, t: new Date().toLocaleString('uz-UZ'), rol: currentRole}]
@@ -884,22 +894,11 @@ function openDet(id) {
   if (isOp) {
     // Diagnostika satri
     var diagRow = '';
-    if (o.hasDiag || o.status === 'Diagnostika') {
-      var dp2 = o.diagP || diagP;
-      if (!o.hasDiag) { o.hasDiag = true; o.diagP = dp2; recalcO(o); save(); }
-      diagRow = '<div style="background:#F3E5F5;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-        '<span style="font-size:13px;color:#6A1B9A;font-weight:800;">Diagnostika xizmati</span>' +
-        '<span style="font-family:monospace;font-size:14px;color:#6A1B9A;font-weight:700;">'+fmt(dp2)+' som</span>' +
-      '</div>';
-    }
+    // Diagnostika narxi hozircha qolda kiritiladi
+    diagRow = '';
 
-    // Xizmatlar grid
-    var chips = xizmatlar.map(function(x, i) {
-      var already = (o.xizmatlar||[]).some(function(ox){return ox.name===x.name;});
-      return '<div data-oid="'+id+'" data-idx="'+i+'" onclick="toggleChip(this)" style="padding:9px 8px;border:2px solid '+(already?'var(--g)':'var(--border)')+';border-radius:10px;font-size:11px;font-weight:700;color:'+(already?'var(--gd)':'var(--muted)')+';background:'+(already?'var(--gl)':'var(--bg)')+';cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;">' +
-        x.name+'<span style="font-size:10px;font-family:monospace;color:var(--gd);">'+fmt(x.price)+'</span>' +
-      '</div>';
-    }).join('');
+    // Xizmatlar gridi olib tashlandi - faqat qolda kiritish
+    var chips = '';
 
     // Qoshilgan xizmatlar
     var addedX = (o.xizmatlar||[]).length ? 
@@ -930,7 +929,7 @@ function openDet(id) {
     xizmatBlok = '<div style="margin-top:14px;padding-top:12px;border-top:2px dashed var(--border);">' +
       '<div style="font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Xizmatlar</div>' +
       diagRow +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">'+chips+'</div>' +
+
       customRow +
       addedX +
       totalRow +
@@ -1048,33 +1047,47 @@ function calcTovLeft() {
   if (!o) return;
   
   var jami = mode==='diag' ? (o.diagP||diagP) : o.jami;
-  var naqd = +document.getElementById('tov-naqd').value||0;
-  var payme = +document.getElementById('tov-payme').value||0;
-  var click = +document.getElementById('tov-click').value||0;
-  var terminal = +document.getElementById('tov-terminal').value||0;
-  var kiritildi = naqd + payme + click + terminal;
+  var naqdEl = document.getElementById('tov-naqd');
+  var paymeEl = document.getElementById('tov-payme');
+  var clickEl = document.getElementById('tov-click');
+  var terminalEl = document.getElementById('tov-terminal');
+  
+  var naqd = naqdEl && naqdEl.value !== '' ? +naqdEl.value : 0;
+  var payme = paymeEl && paymeEl.value !== '' ? +paymeEl.value : 0;
+  var click2 = clickEl && clickEl.value !== '' ? +clickEl.value : 0;
+  var terminal = terminalEl && terminalEl.value !== '' ? +terminalEl.value : 0;
+  var kiritildi = naqd + payme + click2 + terminal;
   var qoldiq = jami - kiritildi;
   
   var qoldiqEl = document.getElementById('tov-qoldiq');
   var qoldiqVal = document.getElementById('tov-qoldiq-val');
   var btn = document.getElementById('tov-confirm-btn');
   
-  if (qoldiq > 0) {
+  if (!qoldiqEl || !btn) return;
+  
+  if (kiritildi === 0) {
+    qoldiqEl.style.display = 'none';
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+  } else if (qoldiq > 0) {
     qoldiqEl.style.display = 'flex';
-    qoldiqVal.textContent = fmt(qoldiq) + ' som';
+    qoldiqEl.style.background = '#FFF8E1';
+    qoldiqVal.style.color = '#E65100';
+    qoldiqVal.textContent = 'Qoldiq: ' + fmt(qoldiq) + ' som';
     btn.style.opacity = '0.5';
     btn.style.cursor = 'not-allowed';
   } else if (qoldiq < 0) {
     qoldiqEl.style.display = 'flex';
-    qoldiqVal.textContent = 'Ortiqcha: ' + fmt(Math.abs(qoldiq)) + ' som';
     qoldiqEl.style.background = '#FFEBEE';
     qoldiqVal.style.color = 'var(--red)';
+    qoldiqVal.textContent = 'Ortiqcha: ' + fmt(Math.abs(qoldiq)) + ' som';
     btn.style.opacity = '0.5';
     btn.style.cursor = 'not-allowed';
   } else {
     qoldiqEl.style.display = 'none';
     btn.style.opacity = '1';
     btn.style.cursor = 'pointer';
+    btn.style.background = 'linear-gradient(120deg,#007A2F,#00C853)';
   }
 }
 function closeTov() { document.getElementById('tov-ov').classList.remove('on'); }
@@ -1443,7 +1456,7 @@ function addCustomX(btn) {
 function recalcO(o) {
   var xT = (o.xizmatlar||[]).reduce(function(s,x){return s+x.price;}, 0);
   o.xT = xT;
-  o.jami = xT + (o.hasDiag ? (o.diagP || diagP) : 0);
+  o.jami = xT;
 }
 
 // ═══ EXCEL EKSPORT ═══
