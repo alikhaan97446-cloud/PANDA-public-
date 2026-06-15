@@ -370,23 +370,51 @@ textarea{resize:vertical;min-height:68px;}
 
 <!-- TOLOV MODAL -->
 <div class="ov" id="tov-ov" style="z-index:400;">
-  <div class="modal">
-    <div class="mhdr"><h3 id="tov-title">Tolov usuli</h3><button class="mcls" onclick="closeTov()">×</button></div>
+  <div class="modal" style="max-width:420px;">
+    <div class="mhdr"><h3 id="tov-title">Tolov usuli</h3><button class="mcls" onclick="closeTov()">x</button></div>
     <div class="mbdy">
       <input type="hidden" id="tov-id">
-      <input type="hidden" id="tov-type" value="Naqd">
       <input type="hidden" id="tov-mode" value="full">
       <div id="tov-info" style="display:none;background:#FCE4EC;color:#880E4F;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-bottom:12px;"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="tc-chip on" onclick="pickTov(this,'Naqd')"><div style="font-size:28px;margin-bottom:4px;">💵</div><div style="font-size:14px;font-weight:800;">Naqd</div></div>
-        <div class="tc-chip" onclick="pickTov(this,'Payme')"><div style="font-size:28px;margin-bottom:4px;">📱</div><div style="font-size:14px;font-weight:800;">Payme</div></div>
-        <div class="tc-chip" onclick="pickTov(this,'Click')"><div style="font-size:28px;margin-bottom:4px;">⚡</div><div style="font-size:14px;font-weight:800;">Click</div></div>
-        <div class="tc-chip" onclick="pickTov(this,'Terminal')"><div style="font-size:28px;margin-bottom:4px;">🏧</div><div style="font-size:14px;font-weight:800;">Terminal</div></div>
+      <div style="background:var(--gl);border-radius:12px;padding:12px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:700;color:var(--gd);">Jami tolov</span>
+        <span id="tov-jami-show" style="font-family:monospace;font-size:16px;font-weight:700;color:var(--gd);">0 som</span>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Tolov turlarini kiriting</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:10px;background:var(--bg);border-radius:10px;">
+          <span style="font-size:18px;">&#128181;</span>
+          <span style="font-size:13px;font-weight:700;width:80px;">Naqd</span>
+          <input type="number" id="tov-naqd" placeholder="0" inputmode="numeric" oninput="calcTovLeft()" style="flex:1;padding:8px 12px;border:2px solid var(--border);border-radius:9px;font-size:13px;font-family:Nunito,sans-serif;background:#fff;">
+          <span style="font-size:11px;color:var(--muted);">som</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:10px;background:var(--bg);border-radius:10px;">
+          <span style="font-size:18px;">&#128241;</span>
+          <span style="font-size:13px;font-weight:700;width:80px;">Payme</span>
+          <input type="number" id="tov-payme" placeholder="0" inputmode="numeric" oninput="calcTovLeft()" style="flex:1;padding:8px 12px;border:2px solid var(--border);border-radius:9px;font-size:13px;font-family:Nunito,sans-serif;background:#fff;">
+          <span style="font-size:11px;color:var(--muted);">som</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:10px;background:var(--bg);border-radius:10px;">
+          <span style="font-size:18px;">&#9889;</span>
+          <span style="font-size:13px;font-weight:700;width:80px;">Click</span>
+          <input type="number" id="tov-click" placeholder="0" inputmode="numeric" oninput="calcTovLeft()" style="flex:1;padding:8px 12px;border:2px solid var(--border);border-radius:9px;font-size:13px;font-family:Nunito,sans-serif;background:#fff;">
+          <span style="font-size:11px;color:var(--muted);">som</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg);border-radius:10px;">
+          <span style="font-size:18px;">&#128247;</span>
+          <span style="font-size:13px;font-weight:700;width:80px;">Terminal</span>
+          <input type="number" id="tov-terminal" placeholder="0" inputmode="numeric" oninput="calcTovLeft()" style="flex:1;padding:8px 12px;border:2px solid var(--border);border-radius:9px;font-size:13px;font-family:Nunito,sans-serif;background:#fff;">
+          <span style="font-size:11px;color:var(--muted);">som</span>
+        </div>
+      </div>
+      <div id="tov-qoldiq" style="display:none;background:#FFF8E1;border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:700;color:#E65100;">Qoldiq</span>
+        <span id="tov-qoldiq-val" style="font-family:monospace;font-size:15px;font-weight:700;color:#E65100;">0 som</span>
       </div>
     </div>
     <div class="mftr">
       <button class="btn-r" style="flex:1;" onclick="closeTov()">Bekor</button>
-      <button class="btn-p" style="flex:1;margin-top:0;" onclick="confirmTov()">Tolandi!</button>
+      <button class="btn-p" style="flex:1;margin-top:0;" id="tov-confirm-btn" onclick="confirmTov()">Tolandi!</button>
     </div>
   </div>
 </div>
