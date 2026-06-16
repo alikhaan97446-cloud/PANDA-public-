@@ -441,12 +441,12 @@ async function loadFromSupabase() {
     if (!res.ok) {
       var errText = await res.text();
       console.error('Load error:', res.status, errText);
-      console.error('Supabase ulanish xatosi: ' + res.status);
       return;
     }
     var data = await res.json();
-    if (Array.isArray(data)) {
-      orders = data.map(function(r) {
+    console.log('Supabase dan keldi:', data ? data.length : 0, 'ta');
+    if (Array.isArray(data) && data.length > 0) {
+      var sbOrders = data.map(function(r) {
         return {
           id: r.id, sana: r.sana, ismi: r.ismi, tel: r.tel,
           mashina: r.mashina, raqam: r.raqam || '', muammo: r.muammo || '',
@@ -457,14 +457,30 @@ async function loadFromSupabase() {
           hist: r.hist || [], ts: r.ts
         };
       });
+      // Lokal va Supabase ma'lumotlarni birlashtirish (Supabase ustunlik qiladi)
+      var localOrders = JSON.parse(localStorage.getItem('po') || '[]');
+      var merged = sbOrders.slice();
+      localOrders.forEach(function(lo) {
+        var exists = merged.find(function(o) { return o.id === lo.id; });
+        if (!exists) merged.push(lo);
+      });
+      merged.sort(function(a, b) { return (b.ts || 0) - (a.ts || 0); });
+      orders = merged;
       save();
       renderO();
       renderStats();
-      if (data.length > 0) toast('✅ ' + data.length + ' ta zaявka yuklandi');
+      toast('✅ ' + data.length + ' ta zaявka yuklandi');
+    } else if (Array.isArray(data) && data.length === 0) {
+      // Supabase bo'sh - lokal ma'lumotlarni ko'rsatamiz
+      console.log('Supabase bo\'sh, lokal ma\'lumotlar ko\'rsatildi');
+      renderO();
+      renderStats();
     }
   } catch(e) {
     console.error('Load catch:', e);
-    console.error('Internet xatosi:', e);
+    // Internet xatosida lokal ma'lumotlarni ko'rsatamiz
+    renderO();
+    renderStats();
   }
 }
 
@@ -479,48 +495,65 @@ async function saveToSupabase(order) {
     nak_type: order.nakType || 'full',
     hist: order.hist || [], ts: order.ts
   };
-  var hdrs = {
-    'Content-Type': 'application/json',
-    'apikey': SB_KEY,
-    'Authorization': 'Bearer ' + SB_KEY,
-    'Prefer': 'resolution=merge-duplicates'
-  };
   try {
+    // UPSERT: agar mavjud bo'lsa yangilaydi, bo'lmasa qo'shadi
     var res = await fetch(SB_URL + '/rest/v1/zayavkalar', {
       method: 'POST',
-      headers: hdrs,
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
       body: JSON.stringify(row)
     });
     if (!res.ok) {
       var err = await res.text();
       console.error('Save error:', err);
-      toast('Saqlashda xato! ' + err);
+      // Agar duplicate key xatosi bo'lsa, UPDATE qilamiz
+      if (err.indexOf('duplicate') > -1 || err.indexOf('23505') > -1) {
+        console.log('Duplicate key - PATCH bilan yangilash...');
+        await updateInSupabase(order);
+      } else {
+        toast('⚠️ Saqlashda xato: ' + err.substring(0, 80));
+      }
+    } else {
+      console.log('✅ Saqlandi:', order.id);
     }
   } catch(e) {
     console.error('Save catch:', e);
-    console.error('Internet xatosi:', e);
+    toast('⚠️ Internet xatosi - mahalliy saqlandi');
   }
 }
 
 async function updateInSupabase(order) {
   var row = {
+    sana: order.sana, ismi: order.ismi, tel: order.tel,
+    mashina: order.mashina, raqam: order.raqam || '', muammo: order.muammo || '',
     status: order.status, tolov: order.tolov || '',
     nak_type: order.nakType || 'full', jami: order.jami || 0,
     hist: order.hist || [], xizmatlar: order.xizmatlar || [],
     xstr: order.xStr || '', has_diag: order.hasDiag || false,
-    diag_p: order.diagP || 0, x_total: order.xT || 0
+    diag_p: order.diagP || 0, x_total: order.xT || 0,
+    diag: order.diag || '', ts: order.ts
   };
   try {
-    var res = await fetch(SB_URL + '/rest/v1/zayavkalar?id=eq.' + order.id, {
+    var res = await fetch(SB_URL + '/rest/v1/zayavkalar?id=eq.' + encodeURIComponent(order.id), {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         'apikey': SB_KEY,
-        'Authorization': 'Bearer ' + SB_KEY
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Prefer': 'return=minimal'
       },
       body: JSON.stringify(row)
     });
-    if (!res.ok) console.error('Update error:', await res.text());
+    if (!res.ok) {
+      var err = await res.text();
+      console.error('Update error:', err);
+    } else {
+      console.log('✅ Yangilandi:', order.id);
+    }
   } catch(e) { console.error('Update catch:', e); }
 }
 
@@ -536,11 +569,10 @@ async function deleteFromSupabase(id) {
   } catch(e) { console.error('Delete catch:', e); }
 }
 
-// Auto-refresh every 30 seconds
+// Auto-refresh every 60 seconds
 setInterval(function() {
-  if (currentRole !== 'admin') loadFromSupabase();
-  else loadFromSupabase();
-}, 30000);
+  loadFromSupabase();
+}, 60000);
 
 
 // ═══ CONSTANTS ═══
@@ -775,7 +807,7 @@ function submitO() {
   var xT = allX.reduce(function(s,x){return s+x.price;},0);
   var hasDiag = ['Diagnostika','Kelishildi','Jarayonda','Yakun','Tolandi','BekorTolandi'].indexOf(status) > -1;
   var order = {
-    id: 'EV-' + String(orders.length+1).padStart(4,'0'),
+    id: 'EV-' + String(Date.now()).slice(-6) + String(Math.floor(Math.random()*100)).padStart(2,'0'),
     sana: new Date().toLocaleString('uz-UZ'),
     ismi: ismi, tel: tel, mashina: mashina, raqam: raqam, muammo: muammo,
     xizmatlar: allX, xStr: allX.map(function(x){return x.name;}).join(', '),
