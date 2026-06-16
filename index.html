@@ -588,6 +588,12 @@ window.onload = function() {
   document.getElementById('dp').value = diagP;
   updateDiagShow();
   renderXgrid();
+  document.addEventListener('keydown', function(e) {
+    var lock = document.getElementById('lock');
+    if (!lock || !lock.classList.contains('on')) return;
+    if (e.key >= '0' && e.key <= '9') lockPress(e.key);
+    else if (e.key === 'Backspace') lockDel();
+  });
 };
 
 // ═══ LOCK SCREEN ═══
@@ -631,7 +637,7 @@ function getCodes() {
     if (!c.ad) c.ad = '1111';
     return c;
   }
-  return {ad:'1111', op:'0000', rh:'0000'};
+  return {ad:'1234', op:'0987', rh:'4044'};
 }
 
 function checkLock() {
