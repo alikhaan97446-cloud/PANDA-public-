@@ -246,6 +246,7 @@ textarea{resize:vertical;min-height:68px;}
     <div class="fg"><label>Model</label><input id="f-mashina" placeholder="BYD Atto 3..."></div>
     <div class="fg"><label>Davlat raqami</label><input id="f-raqam" placeholder="01 A 123 BC"></div>
     <div class="fg"><label>Muammo</label><textarea id="f-muammo" placeholder="Mijoz nima deyapti..."></textarea></div>
+    <div class="fg" id="usta-field" style="display:none;"><label>Usta</label><input id="f-usta" placeholder="Usta ismi..."></div>
   </div>
   <div class="card">
     <div class="ct">📊 Boshlangich holat</div>
@@ -451,6 +452,7 @@ async function loadFromSupabase() {
           id: r.id, sana: r.sana, ismi: r.ismi, tel: r.tel,
           mashina: r.mashina, raqam: r.raqam || '', muammo: r.muammo || '',
           xizmatlar: r.xizmatlar || [], xStr: r.xstr || '',
+          usta: r.usta || '',
           hasDiag: r.has_diag, diagP: r.diag_p, diag: r.diag || '',
           xT: r.x_total, jami: r.jami, status: r.status,
           tolov: r.tolov || '', nakType: r.nak_type || 'full',
@@ -489,6 +491,7 @@ async function saveToSupabase(order) {
     id: order.id, sana: order.sana, ismi: order.ismi, tel: order.tel,
     mashina: order.mashina, raqam: order.raqam || '', muammo: order.muammo || '',
     xizmatlar: order.xizmatlar || [], xstr: order.xStr || '',
+    usta: order.usta || '',
     has_diag: order.hasDiag || false, diag_p: order.diagP || 0,
     diag: order.diag || '', x_total: order.xT || 0, jami: order.jami || 0,
     status: order.status, tolov: order.tolov || '',
@@ -962,6 +965,8 @@ function updateUIForRole() {
 
   // Xizmat card only for operator/rahbar
   document.getElementById('xizmat-card').style.display = (isOp || isRh) ? 'block' : 'none';
+  var ustaField = document.getElementById('usta-field');
+  if (ustaField) ustaField.style.display = (isOp || isRh) ? 'block' : 'none';
 
   // Hisobot
   document.getElementById('hisobot-locked').style.display = isAdmin ? 'block' : 'none';
@@ -1022,6 +1027,7 @@ function calcT() {
 function submitO() {
   var ismi = v('f-ismi'), tel = v('f-tel'), mashina = v('f-mashina');
   var raqam = v('f-raqam').toUpperCase(), muammo = v('f-muammo'), status = v('f-st');
+  var usta = v('f-usta');
   if (!ismi || !tel || !mashina) { toast('Ismi, telefon va mashina toldirilsin!'); return; }
 
   var isOp = currentRole === 'operator' || currentRole === 'rahbar';
@@ -1036,6 +1042,7 @@ function submitO() {
     sana: new Date().toLocaleString('uz-UZ'),
     ismi: ismi, tel: tel, mashina: mashina, raqam: raqam, muammo: muammo,
     xizmatlar: allX, xStr: allX.map(function(x){return x.name;}).join(', '),
+    usta: usta || '',
     hasDiag: hasDiag, diagP: hasDiag ? diagP : 0,
     xT: xT, jami: xT + (hasDiag ? diagP : 0),
     status: status, tolov: '', nakType: 'full',
@@ -1084,6 +1091,7 @@ function renderO() {
       '<div class="oid">'+o.id+'</div>' +
       '<div class="oname">'+o.ismi+'</div>' +
       '<div class="ocar">'+o.tel+' | '+o.mashina+(o.raqam?' · '+o.raqam:'')+'</div>' +
+      (o.usta?'<div style="font-size:11px;color:var(--gd);font-weight:700;margin-top:2px;">Usta: '+o.usta+'</div>':'')+
       '</div><span class="badge '+s.c+'">'+em+' '+s.l+'</span></div>' +
       (o.muammo?'<div style="font-size:11px;color:#999;margin-top:4px;">'+o.muammo+'</div>':'') +
       '<div style="font-size:11px;color:var(--muted);margin-top:6px;background:var(--bg);padding:7px 10px;border-radius:8px;font-weight:600;">'+(o.xStr||'Xizmat belgilanmagan')+'</div>' +
@@ -1193,6 +1201,7 @@ function openDet(id) {
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">'+
       '<div style="background:var(--bg);border-radius:10px;padding:10px;"><div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;margin-bottom:4px;">Telefon</div><div style="font-size:13px;font-weight:700;">'+o.tel+'</div></div>'+
       '<div style="background:var(--bg);border-radius:10px;padding:10px;"><div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;margin-bottom:4px;">Mashina</div><div style="font-size:13px;font-weight:700;">'+o.mashina+(o.raqam?' · '+o.raqam:'')+'</div></div>'+
+      (o.usta?'<div style="background:var(--gl);border-radius:10px;padding:10px;grid-column:1/-1;"><div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;margin-bottom:4px;">Usta</div><div style="font-size:13px;font-weight:700;color:var(--gd);">'+o.usta+'</div></div>':'')+
     '</div>'+
     (o.muammo?'<div style="background:#FFF8E1;border-radius:10px;padding:10px;margin-bottom:10px;font-size:13px;color:#E65100;">'+o.muammo+'</div>':'')+
     xizmatBlok+
