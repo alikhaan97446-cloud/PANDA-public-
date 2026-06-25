@@ -1183,8 +1183,8 @@ function renderO() {
       '<div class="ofoot">' +
       '<div><div style="font-size:10px;color:var(--muted);">'+o.sana+'</div><div class="oprice">'+fmt(o.jami)+' som</div></div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-      '<button class="btn-s" style="font-size:11px;padding:6px 10px;" onclick="openDet(\''+o.id+'\')">Batafsil</button>' +
-      '<button class="btn-s" style="font-size:11px;padding:6px 10px;" onclick="openNakById(\''+o.id+'\')">Nakladnoy</button>' +
+      '<button class="btn-s" style="font-size:11px;padding:6px 10px;" data-oid="'+o.id+'" onclick="openDet(this.dataset.oid)">Batafsil</button>' +
+      '<button class="btn-s" style="font-size:11px;padding:6px 10px;" data-oid="'+o.id+'" onclick="openNakById(this.dataset.oid)">Nakladnoy</button>' +
       '</div></div></div>';
   }).join('');
 }
