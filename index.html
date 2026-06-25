@@ -768,7 +768,9 @@ function saveDp() {
 
 // ═══ NAKLADNOY ═══
 function openNak(o) {
+  console.log('openNak called', o ? o.id : 'null');
   if(!o) return;
+  console.log('openNak proceeding');
   var isDiag = o.nakType==='diag';
   var tot = isDiag?(o.diagP||0):(o.jami||0);
   var xArr = isDiag?[]:(o.xizmatlar||[]);
@@ -1378,7 +1380,7 @@ function confirmTov(){
 
 
 function getNextId(){if(!orders||!orders.length)return 1;var m=0;orders.forEach(function(o){if(o.id&&o.id.indexOf('EV-')===0&&o.id.length===7){var n=parseInt(o.id.slice(3))||0;if(n>m)m=n;}});return m+1;}
-function openNakById(id){var o=orders.find(function(x){return String(x.id)===String(id);});if(o)openNak(o);}
+function openNakById(id){console.log('openNakById',id,'orders len',orders.length);var o=orders.find(function(x){return String(x.id)===String(id);});console.log('found:',o?o.id:'not found');if(o)openNak(o);}
 </script>
 </body>
 </html>
