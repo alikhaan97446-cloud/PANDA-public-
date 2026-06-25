@@ -453,6 +453,7 @@ async function loadFromSupabase() {
           mashina: r.mashina, raqam: r.raqam || '', muammo: r.muammo || '',
           xizmatlar: r.xizmatlar || [], xStr: r.xstr || '',
           usta: r.usta||'',
+          izoh: r.izoh||'',
           hasDiag: r.has_diag, diagP: r.diag_p, diag: r.diag || '',
           xT: r.x_total, jami: r.jami, status: r.status,
           tolov: r.tolov || '', nakType: r.nak_type || 'full',
@@ -862,6 +863,7 @@ function openNak(o) {
         +'</svg>'
       +'</div>'
     +'</div>'
+    +(o.izoh?('<div style="margin:2mm 5mm;padding:3mm 4mm;background:#f9f9f9;border-radius:8px;border-left:4px solid #FFB800"><p style="font-size:7pt;color:#999;font-weight:800;text-transform:uppercase;margin:0 0 1mm 0">Izoh</p><p style="font-size:9pt;font-weight:700;color:#1a1a1a;margin:0">'+o.izoh+'</p></div>'):'')+
     +'<div style="margin:2mm 5mm;padding:3mm 4mm;border:2px solid #FFB800;border-radius:8px;background:#FFFDE7">'
       +'<p style="font-size:9.5pt;font-weight:900;color:#1a1a1a;text-align:center;margin:0 0 2mm 0">&#9989; BAJARILGAN XIZMATLAR UCHUN KAFOLAT BERILADI</p>'
       +'<p style="font-size:7pt;color:#666;text-align:center;line-height:1.5;margin:0">&#9888; Eslatma: Zapchastlar uchun va tabiiy ofatlar natijasida yuzaga kelgan nosozliklar uchun servis javobgar emas.</p>'
@@ -1183,8 +1185,8 @@ function renderO() {
       '<div class="ofoot">' +
       '<div><div style="font-size:10px;color:var(--muted);">'+o.sana+'</div><div class="oprice">'+fmt(o.jami)+' som</div></div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-      '<button class="btn-s" style="font-size:11px;padding:6px 10px;" data-oid="'+o.id+'" onclick="openDet(this.dataset.oid)">Batafsil</button>' +
-      '<button class="btn-s" style="font-size:11px;padding:6px 10px;" data-oid="'+o.id+'" onclick="openNakById(this.dataset.oid)">Nakladnoy</button>' +
+      '<button class="btn-s" style="font-size:11px;padding:6px 10px;" onclick="openDet(\''+o.id+'\')">Batafsil</button>' +
+      '<button class="btn-s" style="font-size:11px;padding:6px 10px;" onclick="nakOpen(\''+o.id+'\')">Nakladnoy</button>' +
       '</div></div></div>';
   }).join('');
 }
@@ -1241,6 +1243,12 @@ function openDet(id) {
         '</div>';
       }).join('') : '';
 
+    // Izoh maydoni
+    var izohRow = '<div style="margin-top:10px;">' +
+      '<div style="font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Izoh / Tafsif</div>' +
+      '<textarea id="det-izoh" data-oid="'+id+'" placeholder="Mijozga izoh, kafolat shartlari..." oninput="saveIzoh(this)" style="width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:10px;font-family:Nunito,sans-serif;font-size:13px;min-height:70px;resize:vertical;background:var(--bg);">'+(o.izoh||'')+'</textarea>' +
+    '</div>';
+
     // Qoshimcha qator
     var customRow = '<div style="display:flex;gap:7px;margin-top:8px;">' +
       '<input id="det-cx-n" placeholder="Boshqa xizmat..." style="flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-family:Nunito,sans-serif;background:var(--bg);">' +
@@ -1261,6 +1269,7 @@ function openDet(id) {
       customRow +
       addedX +
       totalRow +
+      izohRow +
     '</div>';
 
   } else {
@@ -1381,6 +1390,30 @@ function confirmTov(){
 
 function getNextId(){if(!orders||!orders.length)return 1;var m=0;orders.forEach(function(o){if(o.id&&o.id.indexOf('EV-')===0&&o.id.length===7){var n=parseInt(o.id.slice(3))||0;if(n>m)m=n;}});return m+1;}
 function openNakById(id){console.log('openNakById',id,'orders len',orders.length);var o=orders.find(function(x){return String(x.id)===String(id);});console.log('found:',o?o.id:'not found');if(o)openNak(o);}
+
+function showNak(btn) {
+  var id = btn.getAttribute('data-oid');
+  var found = null;
+  for (var i=0; i<orders.length; i++) {
+    if (String(orders[i].id) === String(id)) { found = orders[i]; break; }
+  }
+  if (found) openNak(found);
+}
+function showDet(btn) {
+  var id = btn.getAttribute('data-oid');
+  openDet(id);
+}
+
+function nakOpen(id){for(var i=0;i<orders.length;i++){if(String(orders[i].id)===String(id)){openNak(orders[i]);return;}}toast('Topilmadi');}
+
+function saveIzoh(el) {
+  var id = el.getAttribute('data-oid');
+  var o = orders.find(function(x){return String(x.id)===String(id);});
+  if (!o) return;
+  o.izoh = el.value;
+  save();
+  updateInSupabase(o);
+}
 </script>
 </body>
 </html>
