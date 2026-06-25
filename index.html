@@ -246,7 +246,7 @@ textarea{resize:vertical;min-height:68px;}
     <div class="fg"><label>Model</label><input id="f-mashina" placeholder="BYD Atto 3..."></div>
     <div class="fg"><label>Davlat raqami</label><input id="f-raqam" placeholder="01 A 123 BC"></div>
     <div class="fg"><label>Muammo</label><textarea id="f-muammo" placeholder="Mijoz nima deyapti..."></textarea></div>
-    <div class="fg" id="usta-field" style="display:none;"><label>Usta</label><input id="f-usta" placeholder="Usta ismi..."></div>
+    <div class="fg" id="usta-field"><label>Usta</label><input id="f-usta" placeholder="Usta ismi..."></div>
   </div>
   <div class="card">
     <div class="ct">📊 Boshlangich holat</div>
@@ -406,6 +406,8 @@ textarea{resize:vertical;min-height:68px;}
 <div class="toast" id="toast"></div>
 
 <script>
+// ═══ SUPA
+// ═══ SU
 // ═══ SUPA
 // ═══ SUPABASE CONFIG ═══
 var SB_URL = 'https://yqarjrthsarclwqekxdj.supabase.co';
@@ -788,7 +790,11 @@ function openNak(o) {
     '<div style="padding:3mm 5mm 2mm;"><div style="background:#1a1a1a;color:#FFB800;font-size:9pt;font-weight:900;text-transform:uppercase;padding:2.5mm 3mm;border-radius:6px 6px 0 0;">Bajarilgan ishlar</div><table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#2a2a2a;"><th style="color:#fff;font-size:8pt;padding:2mm 3mm;text-align:center;width:8mm;">No</th><th style="color:#fff;font-size:8pt;padding:2mm 3mm;text-align:left;">Xizmat nomi</th><th style="color:#fff;font-size:8pt;padding:2mm 3mm;text-align:right;">Narxi</th></tr></thead><tbody>'+xRowsHtml+'</tbody></table></div>' +
     '<div style="padding:0 5mm 2mm;"><div style="background:#fff;border:2px solid #FFB800;border-radius:0 0 6px 6px;padding:3mm 4mm;display:flex;justify-content:space-between;align-items:center;"><div style="font-size:10pt;font-weight:900;color:#1a1a1a;text-transform:uppercase;">Jami tolov</div><div><span style="font-size:22pt;font-weight:700;color:#FFB800;">'+fmt(showTotal)+'</span><span style="font-size:12pt;color:#1a1a1a;font-weight:800;"> som</span></div></div></div>' +
     tolovLine +
-    '<div style="padding:3mm 5mm 2mm;display:flex;align-items:flex-end;gap:4mm;border-top:1px dashed #ddd;margin:0 5mm;"><div style="flex:1;"><div style="font-size:8pt;font-weight:900;text-transform:uppercase;margin-bottom:5mm;">Usta imzosi</div><div style="border-top:1.5px solid #ccc;"></div><div style="font-size:7pt;color:#bbb;text-align:center;margin-top:1mm;">(imzo)</div></div><div style="flex:1;"><div style="font-size:8pt;font-weight:900;text-transform:uppercase;margin-bottom:5mm;">Mijoz imzosi</div><div style="border-top:1.5px solid #ccc;"></div><div style="font-size:7pt;color:#bbb;text-align:center;margin-top:1mm;">(imzo)</div></div><div style="width:22mm;height:22mm;flex-shrink:0;border-radius:50%;border:2px dashed #1a1a1a;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;"><img src="'+LOGO+'" style="width:13mm;height:13mm;object-fit:contain;opacity:0.25;position:absolute;"><svg viewBox="0 0 100 100" width="100%" height="100%" style="position:absolute;inset:0;"><path id="tpa" d="M 15,50 A 35,35 0 0,1 85,50" fill="none"/><path id="bpa" d="M 85,50 A 35,35 0 0,1 15,50" fill="none"/><text font-size="9" fill="#1a1a1a" letter-spacing="2"><textPath href="#tpa">PANDA AVTOSERVIS</textPath></text><text font-size="8" fill="#FFB800" letter-spacing="1.5"><textPath href="#bpa" startOffset="5%">SIFAT VA ISHONCH</textPath></text></svg></div></div>' +
+    '<div style="padding:3mm 5mm 2mm;display:flex;align-items:flex-end;gap:4mm;border-top:1px dashed #ddd;margin:0 5mm;"><div style="flex:1;"><div style="font-size:8pt;font-weight:900;text-transform:uppercase;margin-bottom:1mm;">Usta imzosi</div>' + (o.usta ? '<div style="font-size:9pt;font-weight:800;color:#1a1a1a;margin-bottom:4mm;">'+o.usta+'</div>' : '<div style="margin-bottom:5mm;"></div>') + '<div style="border-top:1.5px solid #ccc;"></div><div style="font-size:7pt;color:#bbb;text-align:center;margin-top:1mm;">(imzo)</div></div><div style="flex:1;"><div style="font-size:8pt;font-weight:900;text-transform:uppercase;margin-bottom:1mm;">Mijoz imzosi</div><div style="font-size:9pt;font-weight:800;color:#1a1a1a;margin-bottom:4mm;">'+ o.ismi +'</div><div style="border-top:1.5px solid #ccc;"></div><div style="font-size:7pt;color:#bbb;text-align:center;margin-top:1mm;">(imzo)</div></div><div style="width:22mm;height:22mm;flex-shrink:0;border-radius:50%;border:2px dashed #1a1a1a;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;"><img src="'+LOGO+'" style="width:13mm;height:13mm;object-fit:contain;opacity:0.25;position:absolute;"><svg viewBox="0 0 100 100" width="100%" height="100%" style="position:absolute;inset:0;"><path id="tpa" d="M 15,50 A 35,35 0 0,1 85,50" fill="none"/><path id="bpa" d="M 85,50 A 35,35 0 0,1 15,50" fill="none"/><text font-size="9" fill="#1a1a1a" letter-spacing="2"><textPath href="#tpa">PANDA AVTOSERVIS</textPath></text><text font-size="8" fill="#FFB800" letter-spacing="1.5"><textPath href="#bpa" startOffset="5%">SIFAT VA ISHONCH</textPath></text></svg></div></div>' +
+    '<div style="margin:3mm 5mm;padding:3mm 4mm;border:2px solid #FFB800;border-radius:8px;background:#FFFDE7;">' +
+      '<div style="font-size:10pt;font-weight:900;color:#1a1a1a;text-align:center;margin-bottom:2mm;letter-spacing:0.5px;">&#9989; BAJARILGAN XIZMATLAR UCHUN KAFOLAT BERILADI</div>' +
+      '<div style="font-size:7pt;color:#666;text-align:center;line-height:1.5;">&#9888; Eslatma: Zapchastlar uchun va tabiiy ofatlar natijasida yuzaga kelgan nosozliklar uchun servis javobgar emas.</div>' +
+    '</div>' +
     '<div style="background:#1a1a1a;padding:3mm 5mm;margin-top:3mm;display:flex;justify-content:space-between;align-items:center;"><div><div style="display:flex;align-items:center;gap:2mm;margin-bottom:1.5mm;"><div style="background:#FFB800;border-radius:4px;width:6mm;height:6mm;display:flex;align-items:center;justify-content:center;">&#9989;</div><div style="font-size:7pt;font-weight:900;color:#FFB800;line-height:1.3;">PANDA AVTOSERVISNI<br>TANLAGANINGIZ UCHUN RAHMAT!</div></div><div style="font-size:7pt;color:#999;">Sifatli xizmat - bizning ustuvor maqsadimiz.</div></div><div style="display:flex;flex-direction:column;gap:1.5mm;align-items:flex-end;"><div style="font-size:7.5pt;color:#ccc;font-weight:700;"><span style="color:#FFB800;">&#128222;</span> +998 99 220 11 11</div><div style="font-size:7.5pt;color:#ccc;font-weight:700;"><span style="color:#FFB800;">&#128205;</span> Algoritm filiali, Toshkent</div><div style="font-size:7.5pt;color:#ccc;font-weight:700;"><span style="color:#FFB800;">&#128247;</span> @panda.avtoservis</div></div></div>';
   document.getElementById('nak-ov').classList.add('on');
 }
@@ -966,7 +972,7 @@ function updateUIForRole() {
   // Xizmat card only for operator/rahbar
   document.getElementById('xizmat-card').style.display = (isOp || isRh) ? 'block' : 'none';
   var ustaField = document.getElementById('usta-field');
-  if (ustaField) ustaField.style.display = (isOp || isRh) ? 'block' : 'none';
+  if (ustaField) ustaField.style.display = 'block';
 
   // Hisobot
   document.getElementById('hisobot-locked').style.display = isAdmin ? 'block' : 'none';
@@ -1311,6 +1317,3 @@ function openNakById(id) {
   var o = orders.find(function(x){return String(x.id)===String(id);});
   if (o) openNak(o);
 }
-</script>
-</body>
-</html>
