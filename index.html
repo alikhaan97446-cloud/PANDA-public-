@@ -458,7 +458,7 @@ async function loadFromSupabase() {
           hasDiag: r.has_diag, diagP: r.diag_p, diag: r.diag || '',
           xT: r.x_total, jami: r.jami, status: r.status,
           tolov: r.tolov || '', nakType: r.nak_type || 'full',
-          hist: r.hist || [], ts: r.ts
+          hist: r.hist || [], zapchastlar: r.zapchastlar || [], zT: r.z_total || 0, ts: r.ts
         };
       });
       // Lokal va Supabase ma'lumotlarni birlashtirish (Supabase ustunlik qiladi)
@@ -498,7 +498,7 @@ async function saveToSupabase(order) {
     diag: order.diag || '', x_total: order.xT || 0, jami: order.jami || 0,
     status: order.status, tolov: order.tolov || '',
     nak_type: order.nakType || 'full',
-    hist: order.hist || [], ts: order.ts
+    hist: order.hist || [], zapchastlar: order.zapchastlar || [], z_total: order.zT || 0, ts: order.ts
   };
   try {
     // UPSERT: agar mavjud bo'lsa yangilaydi, bo'lmasa qo'shadi
@@ -540,7 +540,7 @@ async function updateInSupabase(order) {
     hist: order.hist || [], xizmatlar: order.xizmatlar || [],
     xstr: order.xStr || '', has_diag: order.hasDiag || false,
     diag_p: order.diagP || 0, x_total: order.xT || 0,
-    diag: order.diag || '', ts: order.ts
+    diag: order.diag || '', zapchastlar: order.zapchastlar || [], z_total: order.zT || 0, ts: order.ts
   };
   try {
     var res = await fetch(SB_URL + '/rest/v1/zayavkalar?id=eq.' + encodeURIComponent(order.id), {
@@ -630,8 +630,10 @@ function toast(msg, dur) {
 }
 function recalcO(o) {
   var xT = (o.xizmatlar||[]).reduce(function(s,x){return s+(x.price||0);},0);
+  var zT = (o.zapchastlar||[]).reduce(function(s,z){return s+(z.price||0);},0);
   o.xT = xT;
-  o.jami = xT + (o.hasDiag ? (o.diagP||diagP) : 0);
+  o.zT = zT;
+  o.jami = xT + zT + (o.hasDiag ? (o.diagP||diagP) : 0);
   o.xStr = (o.xizmatlar||[]).map(function(x){return x.name;}).join(', ');
 }
 function updateDiagShow() {
@@ -776,14 +778,21 @@ function openNak(o) {
   var isDiag = o.nakType==='diag';
   var tot = isDiag?(o.diagP||0):(o.jami||0);
   var xArr = isDiag?[]:(o.xizmatlar||[]);
+  var zArr = isDiag?[]:(o.zapchastlar||[]);
   var rows = xArr.map(function(x,i){
     return '<tr><td style="padding:2mm 3mm;text-align:center;color:#999;border-bottom:1px solid #f0f0f0">'+(i+1)+'</td>'
-      +'<td style="padding:2mm 3mm;font-size:9pt;font-weight:700;border-bottom:1px solid #f0f0f0">'+x.name+'</td>'
+      +'<td style="padding:2mm 3mm;font-size:9pt;font-weight:700;border-bottom:1px solid #f0f0f0">🔧 '+x.name+'</td>'
       +'<td style="padding:2mm 3mm;font-size:9pt;text-align:right;font-family:monospace;border-bottom:1px solid #f0f0f0">'+fmt(x.price)+' som</td></tr>';
   }).join('');
+  // Zapchastlar rows
+  rows += zArr.map(function(z,i){
+    return '<tr style="background:#FFF3E0"><td style="padding:2mm 3mm;text-align:center;color:#E65100;border-bottom:1px solid #FFE0B2">'+(xArr.length+i+1)+'</td>'
+      +'<td style="padding:2mm 3mm;font-size:9pt;font-weight:700;color:#E65100;border-bottom:1px solid #FFE0B2">⚙️ '+z.name+'</td>'
+      +'<td style="padding:2mm 3mm;font-size:9pt;text-align:right;font-family:monospace;color:#E65100;border-bottom:1px solid #FFE0B2">'+fmt(z.price)+' som</td></tr>';
+  }).join('');
   if(o.hasDiag||isDiag){
-    rows+='<tr style="background:#F3E5F5"><td style="padding:2mm 3mm;text-align:center;color:#6A1B9A">'+(xArr.length+1)+'</td>'
-      +'<td style="padding:2mm 3mm;font-size:9pt;font-weight:700;color:#6A1B9A">Diagnostika</td>'
+    rows+='<tr style="background:#F3E5F5"><td style="padding:2mm 3mm;text-align:center;color:#6A1B9A">'+(xArr.length+zArr.length+1)+'</td>'
+      +'<td style="padding:2mm 3mm;font-size:9pt;font-weight:700;color:#6A1B9A">🔍 Diagnostika</td>'
       +'<td style="padding:2mm 3mm;font-size:9pt;text-align:right;font-family:monospace;color:#6A1B9A">'+fmt(o.diagP)+' som</td></tr>';
   }
   var tl = o.tolov?'<p style="text-align:right;padding:1mm 5mm;font-size:9pt;color:#666;margin:0">Tolov: '+o.tolov+'</p>':'';
@@ -940,6 +949,32 @@ function removeX(btn) {
   var o = orders.find(function(x){return String(x.id)===String(id);});
   if (!o || !o.xizmatlar) return;
   o.xizmatlar.splice(xi,1);
+  recalcO(o);
+  save();
+  updateInSupabase(o);
+  openDet(id);
+}
+function addZapchast(btn) {
+  var id = btn.dataset.oid;
+  var o = orders.find(function(x){return String(x.id)===String(id);});
+  if (!o) return;
+  var n = document.getElementById('det-zn').value.trim();
+  var p = +(document.getElementById('det-zp').value)||0;
+  if (!n) { toast('Zapchast nomini kiriting!'); return; }
+  if (!o.zapchastlar) o.zapchastlar = [];
+  o.zapchastlar.push({name:n,price:p});
+  recalcO(o);
+  save();
+  updateInSupabase(o);
+  toast('⚙️ Zapchast qoshildi!');
+  openDet(id);
+}
+function removeZ(btn) {
+  var id = btn.dataset.oid;
+  var zi = +btn.dataset.zi;
+  var o = orders.find(function(x){return String(x.id)===String(id);});
+  if (!o || !o.zapchastlar) return;
+  o.zapchastlar.splice(zi,1);
   recalcO(o);
   save();
   updateInSupabase(o);
@@ -1257,10 +1292,44 @@ function openDet(id) {
       '<button data-oid="'+id+'" onclick="addCustomX(this)" style="padding:9px 14px;background:var(--gl);color:var(--gd);border:2px solid var(--g);border-radius:9px;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">+</button>' +
     '</div>';
 
-    // Jami
-    var totalRow = '<div style="background:linear-gradient(120deg,#007A2F,#00C853);border-radius:10px;padding:13px 16px;display:flex;justify-content:space-between;margin-top:12px;">' +
-      '<span style="color:rgba(255,255,255,.8);font-size:12px;font-weight:800;text-transform:uppercase;">Jami tolov</span>' +
-      '<span id="det-total" style="color:#fff;font-family:monospace;font-size:18px;font-weight:700;">'+fmt(o.jami)+' som</span>' +
+    // Zapchastlar bloki
+    var addedZ = (o.zapchastlar||[]).length ?
+      '<div style="margin-top:4px;">' +
+      (o.zapchastlar||[]).map(function(z, zi) {
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">' +
+          '<span style="font-size:13px;font-weight:700;">⚙️ '+z.name+'</span>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<span style="font-family:monospace;font-size:13px;color:#E65100;">'+fmt(z.price)+'</span>' +
+            '<button data-oid="'+id+'" data-zi="'+zi+'" onclick="removeZ(this)" style="background:#ffebee;border:none;color:var(--red);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:900;line-height:1;">x</button>' +
+          '</div>' +
+        '</div>';
+      }).join('') +
+      '</div>' : '';
+    var zapchastRow = '<div style="margin-top:14px;padding-top:12px;border-top:2px dashed #FFE0B2;">' +
+      '<div style="font-size:11px;font-weight:900;color:#E65100;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">⚙️ Zapchastlar</div>' +
+      addedZ +
+      '<div style="display:flex;gap:7px;margin-top:8px;">' +
+        '<input id="det-zn" placeholder="Zapchast nomi..." style="flex:1;padding:9px 12px;border:2px solid #FFE0B2;border-radius:10px;font-size:13px;font-family:Nunito,sans-serif;background:var(--bg);">' +
+        '<input id="det-zp" type="number" placeholder="Narx" style="width:95px;padding:9px 12px;border:2px solid #FFE0B2;border-radius:10px;font-size:13px;font-family:Nunito,sans-serif;background:var(--bg);">' +
+        '<button data-oid="'+id+'" onclick="addZapchast(this)" style="padding:9px 14px;background:#FFF3E0;color:#E65100;border:2px solid #FFB74D;border-radius:9px;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">+</button>' +
+      '</div>' +
+    '</div>';
+
+    // Jami (ikki qism)
+    var xizmatSum = (o.xizmatlar||[]).reduce(function(s,x){return s+(x.price||0);},0);
+    var zSum = (o.zapchastlar||[]).reduce(function(s,z){return s+(z.price||0);},0);
+    var diagSum = o.hasDiag ? (o.diagP||diagP) : 0;
+    var jamiSumHtml = '';
+    if (xizmatSum > 0) jamiSumHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.8);margin-bottom:3px;"><span>🔧 Usta haqqi</span><span style="font-family:monospace;">'+fmt(xizmatSum)+' som</span></div>';
+    if (zSum > 0) jamiSumHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.8);margin-bottom:3px;"><span>⚙️ Zapchastlar</span><span style="font-family:monospace;">'+fmt(zSum)+' som</span></div>';
+    if (diagSum > 0) jamiSumHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.8);margin-bottom:3px;"><span>🔍 Diagnostika</span><span style="font-family:monospace;">'+fmt(diagSum)+' som</span></div>';
+
+    var totalRow = '<div style="background:linear-gradient(120deg,#007A2F,#00C853);border-radius:10px;padding:13px 16px;margin-top:12px;">' +
+      jamiSumHtml +
+      '<div style="display:flex;justify-content:space-between;margin-top:'+(jamiSumHtml?'6px':'0')+';">' +
+        '<span style="color:rgba(255,255,255,.8);font-size:12px;font-weight:800;text-transform:uppercase;">Jami tolov</span>' +
+        '<span id="det-total" style="color:#fff;font-family:monospace;font-size:18px;font-weight:700;">'+fmt(o.jami)+' som</span>' +
+      '</div>' +
     '</div>';
 
     xizmatBlok = '<div style="margin-top:14px;padding-top:12px;border-top:2px dashed var(--border);">' +
@@ -1269,6 +1338,7 @@ function openDet(id) {
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">'+chips+'</div>' +
       customRow +
       addedX +
+      zapchastRow +
       totalRow +
       izohRow +
     '</div>';
