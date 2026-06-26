@@ -169,11 +169,12 @@ textarea{resize:vertical;min-height:68px;}
 .locked-msg p{font-size:15px;font-weight:700;color:var(--muted);}
 
 @media print{
-  @page{size:A4;margin:15mm;}
+  @page{size:A5;margin:5mm;}
   body>*{display:none!important;}
   #nak-ov{display:block!important;position:static!important;background:none!important;padding:0!important;}
-  .nwrap{border-radius:0!important;max-width:100%!important;box-shadow:none!important;}
+  #nak-ov .nwrap{border-radius:0!important;max-width:100%!important;box-shadow:none!important;width:100%!important;}
   .nact{display:none!important;}
+  #lock{display:none!important;}
 }
 </style>
 </head>
@@ -1186,7 +1187,7 @@ function renderO() {
       '<div><div style="font-size:10px;color:var(--muted);">'+o.sana+'</div><div class="oprice">'+fmt(o.jami)+' som</div></div>' +
       '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
       '<button class="btn-s" style="font-size:11px;padding:6px 10px;" onclick="openDet(\''+o.id+'\')">Batafsil</button>' +
-      '<button class="btn-s" style="font-size:11px;padding:6px 10px;" onclick="nakOpen(\''+o.id+'\')">Nakladnoy</button>' +
+      '<button class="btn-s" style="font-size:11px;padding:6px 10px;" id="nb-'+o.id+'" onclick="nakOpen2(this.id)">Nakladnoy</button>' +
       '</div></div></div>';
   }).join('');
 }
@@ -1413,6 +1414,21 @@ function saveIzoh(el) {
   o.izoh = el.value;
   save();
   updateInSupabase(o);
+}
+
+function nakOpen2(elId) {
+  var id = elId.replace('nb-', '');
+  for (var i=0; i<orders.length; i++) {
+    if (String(orders[i].id) === String(id)) {
+      openNak(orders[i]);
+      return;
+    }
+  }
+  toast('Topilmadi');
+}
+function detOpen2(elId) {
+  var id = elId.replace('db-', '');
+  openDet(id);
 }
 </script>
 </body>
