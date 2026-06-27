@@ -237,18 +237,51 @@ textarea{resize:vertical;min-height:68px;}
 
 <!-- YANGI -->
 <div class="pg on" id="pg-yangi">
-  <div class="card">
-    <div class="ct">👤 Mijoz</div>
-    <div class="fg"><label>Ismi</label><input id="f-ismi" placeholder="Alisher Karimov"></div>
-    <div class="fg"><label>Telefon</label><input id="f-tel" type="tel" placeholder="+998 90 123 45 67"></div>
+  <!-- TABS -->
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <button id="tab-z1" onclick="switchZTab(1)" style="flex:1;padding:10px;border-radius:12px;border:2px solid var(--g);background:var(--gl);color:var(--gd);font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">🔧 Zaявka 1</button>
+    <button id="tab-z2" onclick="switchZTab(2)" style="flex:1;padding:10px;border-radius:12px;border:2px solid var(--border);background:var(--bg);color:var(--muted);font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">🏢 Zaявка 2</button>
   </div>
-  <div class="card">
-    <div class="ct">🚗 Mashina</div>
-    <div class="fg"><label>Model</label><input id="f-mashina" placeholder="BYD Atto 3..."></div>
-    <div class="fg"><label>Davlat raqami</label><input id="f-raqam" placeholder="01 A 123 BC"></div>
-    <div class="fg"><label>Muammo</label><textarea id="f-muammo" placeholder="Mijoz nima deyapti..."></textarea></div>
-    <div class="fg"><label>Usta</label><input id="f-usta" placeholder="Usta ismi..."></div>
+
+  <!-- ZAЯВКА 1 -->
+  <div id="ztab-1">
+    <div class="card">
+      <div class="ct">👤 Mijoz</div>
+      <div class="fg"><label>Ismi *</label><input id="f-ismi" placeholder="Alisher Karimov"></div>
+      <div class="fg"><label>Telefon *</label><input id="f-tel" type="tel" placeholder="+998 90 123 45 67"></div>
+    </div>
+    <div class="card">
+      <div class="ct">🚗 Mashina</div>
+      <div class="fg"><label>Model *</label><input id="f-mashina" placeholder="BYD Atto 3..."></div>
+      <div class="fg"><label>Davlat raqami</label><input id="f-raqam" placeholder="01 A 123 BC"></div>
+      <div class="fg"><label>Muammo</label><textarea id="f-muammo" placeholder="Mijoz nima deyapti..."></textarea></div>
+      <div class="fg"><label>Usta</label><input id="f-usta" placeholder="Usta ismi..."></div>
+    </div>
   </div>
+
+  <!-- ZAЯВКА 2 -->
+  <div id="ztab-2" style="display:none;">
+    <div class="card" style="border:2px solid #FFB74D;">
+      <div class="ct" style="color:#E65100;">🏢 Avtosalon / Voucher</div>
+      <div class="fg"><label style="color:#E65100;">VIN code *</label><input id="f2-vin" placeholder="WVWZZZ1KZ..." style="border-color:#FFB74D;font-family:monospace;font-size:14px;letter-spacing:1px;text-transform:uppercase;"></div>
+      <div class="fg"><label>Ismi (ixtiyoriy)</label><input id="f2-ismi" placeholder="Alisher Karimov"></div>
+      <div class="fg"><label>Telefon (ixtiyoriy)</label><input id="f2-tel" type="tel" placeholder="+998 90 123 45 67"></div>
+      <div class="fg"><label>Mashina modeli (ixtiyoriy)</label><input id="f2-mashina" placeholder="BYD Atto 3..."></div>
+      <div class="fg"><label>Davlat raqami (ixtiyoriy)</label><input id="f2-raqam" placeholder="01 A 123 BC"></div>
+      <div class="fg"><label>Muammo</label><textarea id="f2-muammo" placeholder="Mijoz nima deyapti..."></textarea></div>
+      <div class="fg"><label>Usta</label><input id="f2-usta" placeholder="Usta ismi..."></div>
+    </div>
+    <div class="card" style="border:2px solid #CE93D8;">
+      <div class="ct" style="color:#6A1B9A;">🏢 Avtosalon ma'lumoti</div>
+      <div class="fg"><label>Avtosalon nomi</label><input id="f2-salon" placeholder="Panda Motors..."></div>
+    </div>
+    <div class="card" style="border:2px solid #80CBC4;">
+      <div class="ct" style="color:#00695C;">🎟️ Voucher</div>
+      <div class="fg"><label>Voucher raqami</label><input id="f2-voucher" placeholder="V-2024-001..."></div>
+    </div>
+  </div>
+
+  <!-- HOLAT -->
   <div class="card">
     <div class="ct">📊 Boshlangich holat</div>
     <div class="sgrid" id="admin-statuses">
@@ -265,14 +298,21 @@ textarea{resize:vertical;min-height:68px;}
       <span id="diag-price-show" style="font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:#6A1B9A;">200,000 som</span>
     </div>
   </div>
+
+  <!-- XIZMATLAR + ZAPCHASTLAR (har ikki tab uchun) -->
   <div class="card" id="xizmat-card" style="display:none;">
     <div class="ct">🔧 Xizmatlar</div>
-    
     <div class="ct" style="margin-bottom:8px;">✏️ Qoshimcha</div>
     <div id="clist"></div>
-    <button class="btn-s" onclick="addC()" style="width:100%;margin-top:6px;">+ Qoshish</button>
-    <div class="total">
-      <div><div class="tl">Jami summa</div><div class="tc" id="xcnt">0 ta xizmat</div></div>
+    <button class="btn-s" onclick="addC()" style="width:100%;margin-top:6px;">+ Xizmat qoshish</button>
+    <!-- ZAPCHASTLAR -->
+    <div style="margin-top:14px;padding-top:12px;border-top:2px dashed #FFE0B2;">
+      <div style="font-size:11px;font-weight:900;color:#E65100;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">⚙️ Zapchastlar</div>
+      <div id="zlist"></div>
+      <button class="btn-s" onclick="addZ()" style="width:100%;margin-top:6px;border-color:#FFB74D;color:#E65100;background:#FFF3E0;">+ Zapchast qoshish</button>
+    </div>
+    <div class="total" style="margin-top:12px;">
+      <div><div class="tl">Jami summa</div><div class="tc" id="xcnt">0 ta</div></div>
       <div class="tv" id="tv">0 som</div>
     </div>
   </div>
@@ -458,7 +498,7 @@ async function loadFromSupabase() {
           hasDiag: r.has_diag, diagP: r.diag_p, diag: r.diag || '',
           xT: r.x_total, jami: r.jami, status: r.status,
           tolov: r.tolov || '', nakType: r.nak_type || 'full',
-          hist: r.hist || [], zapchastlar: r.zapchastlar || [], zT: r.z_total || 0, ts: r.ts
+          hist: r.hist || [], zapchastlar: r.zapchastlar || [], zT: r.z_total || 0, vin: r.vin || '', salon: r.salon || '', voucher: r.voucher || '', tip: r.tip || 'z1', ts: r.ts
         };
       });
       // Lokal va Supabase ma'lumotlarni birlashtirish (Supabase ustunlik qiladi)
@@ -498,7 +538,7 @@ async function saveToSupabase(order) {
     diag: order.diag || '', x_total: order.xT || 0, jami: order.jami || 0,
     status: order.status, tolov: order.tolov || '',
     nak_type: order.nakType || 'full',
-    hist: order.hist || [], zapchastlar: order.zapchastlar || [], z_total: order.zT || 0, ts: order.ts
+    hist: order.hist || [], zapchastlar: order.zapchastlar || [], z_total: order.zT || 0, vin: order.vin || '', salon: order.salon || '', voucher: order.voucher || '', tip: order.tip || 'z1', ts: order.ts
   };
   try {
     // UPSERT: agar mavjud bo'lsa yangilaydi, bo'lmasa qo'shadi
@@ -540,7 +580,7 @@ async function updateInSupabase(order) {
     hist: order.hist || [], xizmatlar: order.xizmatlar || [],
     xstr: order.xStr || '', has_diag: order.hasDiag || false,
     diag_p: order.diagP || 0, x_total: order.xT || 0,
-    diag: order.diag || '', zapchastlar: order.zapchastlar || [], z_total: order.zT || 0, ts: order.ts
+    diag: order.diag || '', zapchastlar: order.zapchastlar || [], z_total: order.zT || 0, vin: order.vin || '', salon: order.salon || '', voucher: order.voucher || '', tip: order.tip || 'z1', ts: order.ts
   };
   try {
     var res = await fetch(SB_URL + '/rest/v1/zayavkalar?id=eq.' + encodeURIComponent(order.id), {
@@ -604,7 +644,8 @@ var xizmatlar = [];
 var diagP = +(localStorage.getItem('pd') || 200000);
 var CODES = JSON.parse(localStorage.getItem('panda_codes') || '{"ad":"1111","op":"0000","rh":"0000"}');
 
-var selX = [], custX = [], curSt = 'Yangi', hMode = 'month';
+var selX = [], custX = [], custZ = [], curSt = 'Yangi', hMode = 'month';
+var _zTab = 1;
 var currentRole = 'admin';
 var lockInput = '';
 var lockRole = 'admin';
@@ -1066,6 +1107,7 @@ function unlock(role) {
   updateUIForRole();
   renderO();
   renderStats();
+  renderZ();
   if (role === 'rahbar') renderXcfg();
   // Load from Supabase in background - don't block login
   setTimeout(function() { loadFromSupabase(); }, 500);
@@ -1139,36 +1181,91 @@ function renderC() {
   calcT();
 }
 function calcT() {
-  var t = selX.reduce(function(s,i){return s+xizmatlar[i].price;},0) + custX.reduce(function(s,x){return s+(x.price||0);},0);
+  var xT = selX.reduce(function(s,i){return s+xizmatlar[i].price;},0) + custX.reduce(function(s,x){return s+(x.price||0);},0);
+  var zT = custZ.reduce(function(s,z){return s+(z.price||0);},0);
+  var t = xT + zT;
   var c = selX.length + custX.filter(function(x){return x.name;}).length;
   var tvEl = document.getElementById('tv');
   var xcEl = document.getElementById('xcnt');
   if (tvEl) tvEl.textContent = fmt(t) + ' som';
-  if (xcEl) xcEl.textContent = c + ' ta xizmat';
+  if (xcEl) xcEl.textContent = c + ' ta xizmat' + (custZ.length ? ', ' + custZ.length + ' zapchast' : '');
+}
+
+function addZ() {
+  custZ.push({name:'',price:0});
+  renderZ();
+}
+
+function renderZ() {
+  var el = document.getElementById('zlist');
+  if (!el) return;
+  el.innerHTML = custZ.map(function(z,i){
+    return '<div class="crow" style="margin-bottom:6px;">' +
+      '<input placeholder="Zapchast nomi" value="'+z.name+'" oninput="custZ['+i+'].name=this.value;calcT()" style="flex:1;padding:8px 10px;border:2px solid #FFE0B2;border-radius:8px;font-family:Nunito,sans-serif;font-size:13px;background:var(--bg);">' +
+      '<input type="number" placeholder="Narx" value="'+(z.price||'')+'" oninput="custZ['+i+'].price=+this.value||0;calcT()" style="width:90px;padding:8px 10px;border:2px solid #FFE0B2;border-radius:8px;font-family:Nunito,sans-serif;font-size:13px;background:var(--bg);">' +
+      '<button onclick="custZ.splice('+i+',1);renderZ()" style="background:#ffebee;border:none;color:var(--red);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;font-weight:900;">x</button>' +
+    '</div>';
+  }).join('');
+  calcT();
+}
+
+function switchZTab(n) {
+  document.getElementById('ztab-1').style.display = n===1 ? '' : 'none';
+  document.getElementById('ztab-2').style.display = n===2 ? '' : 'none';
+  var t1 = document.getElementById('tab-z1');
+  var t2 = document.getElementById('tab-z2');
+  if (n===1) {
+    t1.style.border='2px solid var(--g)'; t1.style.background='var(--gl)'; t1.style.color='var(--gd)';
+    t2.style.border='2px solid var(--border)'; t2.style.background='var(--bg)'; t2.style.color='var(--muted)';
+  } else {
+    t2.style.border='2px solid #FFB74D'; t2.style.background='#FFF3E0'; t2.style.color='#E65100';
+    t1.style.border='2px solid var(--border)'; t1.style.background='var(--bg)'; t1.style.color='var(--muted)';
+  }
+  window._zTab = n;
 }
 
 // ═══ SUBMIT ═══
 function submitO() {
-  var ismi = v('f-ismi'), tel = v('f-tel'), mashina = v('f-mashina');
-  var raqam = v('f-raqam').toUpperCase(), muammo = v('f-muammo'), status = v('f-st');
-  var usta = v('f-usta');
-  if (!ismi || !tel || !mashina) { toast('Ismi, telefon va mashina toldirilsin!'); return; }
-
+  var status = v('f-st');
   var isOp = currentRole === 'operator' || currentRole === 'rahbar';
-  var allX = isOp ? selX.map(function(i){return {name:xizmatlar[i].name,price:xizmatlar[i].price};}).concat(custX.filter(function(x){return x.name;}).map(function(x){return {name:x.name,price:x.price||0};})) : [];
+  var isZ2 = window._zTab === 2;
+  var ismi, tel, mashina, raqam, muammo, usta, vin='', salon='', voucher='';
 
-  if (isOp && !allX.length) { toast('Kamida 1 xizmat tanlang!'); return; }
+  if (isZ2) {
+    // Zaявka 2 - VIN majburiy
+    vin = document.getElementById('f2-vin') ? document.getElementById('f2-vin').value.trim().toUpperCase() : '';
+    if (!vin) { toast('VIN code kiritilsin!'); return; }
+    ismi = document.getElementById('f2-ismi') ? document.getElementById('f2-ismi').value.trim() : '';
+    tel = document.getElementById('f2-tel') ? document.getElementById('f2-tel').value.trim() : '';
+    mashina = document.getElementById('f2-mashina') ? document.getElementById('f2-mashina').value.trim() : '';
+    raqam = document.getElementById('f2-raqam') ? document.getElementById('f2-raqam').value.trim().toUpperCase() : '';
+    muammo = document.getElementById('f2-muammo') ? document.getElementById('f2-muammo').value.trim() : '';
+    usta = document.getElementById('f2-usta') ? document.getElementById('f2-usta').value.trim() : '';
+    salon = document.getElementById('f2-salon') ? document.getElementById('f2-salon').value.trim() : '';
+    voucher = document.getElementById('f2-voucher') ? document.getElementById('f2-voucher').value.trim() : '';
+  } else {
+    ismi = v('f-ismi'); tel = v('f-tel'); mashina = v('f-mashina');
+    raqam = v('f-raqam').toUpperCase(); muammo = v('f-muammo'); usta = v('f-usta');
+    if (!ismi || !tel || !mashina) { toast('Ismi, telefon va mashina toldirilsin!'); return; }
+  }
+
+  var allX = isOp ? selX.map(function(i){return {name:xizmatlar[i].name,price:xizmatlar[i].price};}).concat(custX.filter(function(x){return x.name;}).map(function(x){return {name:x.name,price:x.price||0};})) : [];
+  var allZ = custZ.filter(function(z){return z.name;}).map(function(z){return {name:z.name,price:z.price||0};});
 
   var xT = allX.reduce(function(s,x){return s+x.price;},0);
+  var zT = allZ.reduce(function(s,z){return s+z.price;},0);
   var hasDiag = ['Diagnostika','Kelishildi','Jarayonda','Yakun','Tolandi','BekorTolandi'].indexOf(status) > -1;
   var order = {
-        id: 'EV-' + String(getNextId()).padStart(4,'0'),
+    id: (isZ2 ? 'VIN-' : 'EV-') + String(getNextId()).padStart(4,'0'),
     sana: new Date().toLocaleString('uz-UZ'),
-    ismi: ismi, tel: tel, mashina: mashina, raqam: raqam, muammo: muammo,
+    tip: isZ2 ? 'z2' : 'z1',
+    ismi: ismi||'', tel: tel||'', mashina: mashina||'', raqam: raqam||'', muammo: muammo||'',
+    vin: vin, salon: salon, voucher: voucher,
     xizmatlar: allX, xStr: allX.map(function(x){return x.name;}).join(', '),
+    zapchastlar: allZ, zT: zT,
     usta: usta||'',
     hasDiag: hasDiag, diagP: hasDiag ? diagP : 0,
-    xT: xT, jami: xT + (hasDiag ? diagP : 0),
+    xT: xT, jami: xT + zT + (hasDiag ? diagP : 0),
     status: status, tolov: '', nakType: 'full',
     ts: Date.now(),
     hist: [{s: status, t: new Date().toLocaleString('uz-UZ'), rol: currentRole}]
@@ -1180,17 +1277,17 @@ function submitO() {
   var btn = document.getElementById('sbtn');
   btn.disabled = true; btn.innerHTML = '<span class="sp"></span> Saqlanmoqda...';
   setTimeout(function() {
-    btn.disabled = false; btn.innerHTML = 'Zaявka saqlash';
-    ['f-ismi','f-tel','f-mashina','f-raqam','f-muammo'].forEach(function(id){
+    btn.disabled = false; btn.innerHTML = '✅ Zaявka saqlash';
+    ['f-ismi','f-tel','f-mashina','f-raqam','f-muammo','f2-vin','f2-ismi','f2-tel','f2-mashina','f2-raqam','f2-muammo','f2-salon','f2-voucher'].forEach(function(id){
       var el = document.getElementById(id); if(el) el.value = '';
     });
     document.getElementById('f-st').value = 'Yangi';
-    selX = []; custX = [];
+    selX = []; custX = []; custZ = [];
     document.querySelectorAll('#admin-statuses .sc').forEach(function(c,i){
       c.classList.remove('on','on-r'); if(i===0) c.classList.add('on');
     });
     document.getElementById('diag-card').style.display = 'none';
-    renderC(); renderXgrid();
+    renderC(); renderZ(); renderXgrid();
     toast(order.id + ' saqlandi!');
     saveToSupabase(order);
   }, 400);
@@ -1201,7 +1298,7 @@ function renderO() {
   var q = (document.getElementById('srch') ? document.getElementById('srch').value || '' : '').toLowerCase();
   var st = document.getElementById('flt') ? document.getElementById('flt').value || '' : '';
   var f = orders.filter(function(o) {
-    var m = !q || (o.ismi||'').toLowerCase().indexOf(q)>-1 || (o.mashina||'').toLowerCase().indexOf(q)>-1 || (o.id||'').toLowerCase().indexOf(q)>-1;
+    var m = !q || (o.ismi||'').toLowerCase().indexOf(q)>-1 || (o.mashina||'').toLowerCase().indexOf(q)>-1 || (o.id||'').toLowerCase().indexOf(q)>-1 || (o.vin||'').toLowerCase().indexOf(q)>-1 || (o.salon||'').toLowerCase().indexOf(q)>-1 || (o.voucher||'').toLowerCase().indexOf(q)>-1;
     return m && (!st || o.status === st);
   });
   var el = document.getElementById('olist');
@@ -1213,8 +1310,8 @@ function renderO() {
     return '<div class="ocard">' +
       '<div class="ohdr"><div>' +
       '<div class="oid">'+o.id+'</div>' +
-      '<div class="oname">'+o.ismi+'</div>' +
-      '<div class="ocar">'+o.tel+' | '+o.mashina+(o.raqam?' · '+o.raqam:'')+'</div>' +
+      '<div class="oname">'+(o.tip==='z2'?'🏢 ':'')+(o.ismi||o.vin||'—')+'</div>' +
+      '<div class="ocar">'+(o.tip==='z2'?'VIN: '+(o.vin||'')+(o.salon?' | 🏢 '+o.salon:'')+(o.voucher?' | 🎟️ '+o.voucher:''):(o.tel+' | '+o.mashina+(o.raqam?' · '+o.raqam:'')))+'</div>' +
       '</div><span class="badge '+s.c+'">'+em+' '+s.l+'</span></div>' +
       (o.muammo?'<div style="font-size:11px;color:#999;margin-top:4px;">'+o.muammo+'</div>':'') +
       '<div style="font-size:11px;color:var(--muted);margin-top:6px;background:var(--bg);padding:7px 10px;border-radius:8px;font-weight:600;">'+(o.xStr||'Xizmat belgilanmagan')+'</div>' +
@@ -1343,6 +1440,70 @@ function openDet(id) {
       izohRow +
     '</div>';
 
+  } else if (currentRole === 'rahbar') {
+    // Rahbar - to'liq tahrirlash
+    var chips = xizmatlar.map(function(x, i) {
+      var already = (o.xizmatlar||[]).some(function(ox){return ox.name===x.name;});
+      return '<div data-oid="'+id+'" data-idx="'+i+'" onclick="toggleChip(this)" style="padding:9px 8px;border:2px solid '+(already?'var(--g)':'var(--border)')+';border-radius:10px;font-size:11px;font-weight:700;color:'+(already?'var(--gd)':'var(--muted)')+';background:'+(already?'var(--gl)':'var(--bg)')+';cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+        x.name+'<span style="font-size:10px;font-family:monospace;color:var(--gd);">'+fmt(x.price)+'</span>' +
+      '</div>';
+    }).join('');
+    var addedX = (o.xizmatlar||[]).length ?
+      '<div style="margin-top:10px;margin-bottom:6px;font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;">Tanlangan xizmatlar</div>' +
+      (o.xizmatlar||[]).map(function(x, xi) {
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">' +
+          '<span style="font-size:13px;font-weight:700;">'+x.name+'</span>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<span style="font-family:monospace;font-size:13px;color:var(--gd);">'+fmt(x.price)+'</span>' +
+            '<button data-oid="'+id+'" data-xi="'+xi+'" onclick="removeX(this)" style="background:#ffebee;border:none;color:var(--red);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:900;line-height:1;">x</button>' +
+          '</div>' +
+        '</div>';
+      }).join('') : '';
+    var addedZ = (o.zapchastlar||[]).length ?
+      '<div style="margin-top:4px;">' +
+      (o.zapchastlar||[]).map(function(z, zi) {
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">' +
+          '<span style="font-size:13px;font-weight:700;">⚙️ '+z.name+'</span>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<span style="font-family:monospace;font-size:13px;color:#E65100;">'+fmt(z.price)+'</span>' +
+            '<button data-oid="'+id+'" data-zi="'+zi+'" onclick="removeZ(this)" style="background:#ffebee;border:none;color:var(--red);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:900;line-height:1;">x</button>' +
+          '</div>' +
+        '</div>';
+      }).join('') +
+      '</div>' : '';
+    var xizmatSum2 = (o.xizmatlar||[]).reduce(function(s,x){return s+(x.price||0);},0);
+    var zSum2 = (o.zapchastlar||[]).reduce(function(s,z){return s+(z.price||0);},0);
+    var diagSum2 = o.hasDiag ? (o.diagP||diagP) : 0;
+    var jh2 = '';
+    if (xizmatSum2>0) jh2+='<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.8);margin-bottom:3px;"><span>🔧 Usta haqqi</span><span style="font-family:monospace;">'+fmt(xizmatSum2)+' som</span></div>';
+    if (zSum2>0) jh2+='<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.8);margin-bottom:3px;"><span>⚙️ Zapchastlar</span><span style="font-family:monospace;">'+fmt(zSum2)+' som</span></div>';
+    if (diagSum2>0) jh2+='<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.8);margin-bottom:3px;"><span>🔍 Diagnostika</span><span style="font-family:monospace;">'+fmt(diagSum2)+' som</span></div>';
+    xizmatBlok = '<div style="margin-top:14px;padding-top:12px;border-top:2px dashed var(--border);">' +
+      '<div style="font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Xizmatlar</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">'+chips+'</div>' +
+      '<div style="display:flex;gap:7px;margin-top:8px;">' +
+        '<input id="det-cx-n" placeholder="Boshqa xizmat..." style="flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-family:Nunito,sans-serif;background:var(--bg);">' +
+        '<input id="det-cx-p" type="number" placeholder="Narx" style="width:95px;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-family:Nunito,sans-serif;background:var(--bg);">' +
+        '<button data-oid="'+id+'" onclick="addCustomX(this)" style="padding:9px 14px;background:var(--gl);color:var(--gd);border:2px solid var(--g);border-radius:9px;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">+</button>' +
+      '</div>' +
+      addedX +
+      '<div style="margin-top:14px;padding-top:12px;border-top:2px dashed #FFE0B2;">' +
+        '<div style="font-size:11px;font-weight:900;color:#E65100;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">⚙️ Zapchastlar</div>' +
+        addedZ +
+        '<div style="display:flex;gap:7px;margin-top:8px;">' +
+          '<input id="det-zn" placeholder="Zapchast nomi..." style="flex:1;padding:9px 12px;border:2px solid #FFE0B2;border-radius:10px;font-size:13px;font-family:Nunito,sans-serif;background:var(--bg);">' +
+          '<input id="det-zp" type="number" placeholder="Narx" style="width:95px;padding:9px 12px;border:2px solid #FFE0B2;border-radius:10px;font-size:13px;font-family:Nunito,sans-serif;background:var(--bg);">' +
+          '<button data-oid="'+id+'" onclick="addZapchast(this)" style="padding:9px 14px;background:#FFF3E0;color:#E65100;border:2px solid #FFB74D;border-radius:9px;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">+</button>' +
+        '</div>' +
+      '</div>' +
+      '<div style="background:linear-gradient(120deg,#007A2F,#00C853);border-radius:10px;padding:13px 16px;margin-top:12px;">' +
+        jh2 +
+        '<div style="display:flex;justify-content:space-between;margin-top:'+(jh2?'6px':'0')+';">' +
+          '<span style="color:rgba(255,255,255,.8);font-size:12px;font-weight:800;text-transform:uppercase;">Jami tolov</span>' +
+          '<span id="det-total" style="color:#fff;font-family:monospace;font-size:18px;font-weight:700;">'+fmt(o.jami)+' som</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
   } else {
     // Admin ko'rishi
     xizmatBlok =
@@ -1364,8 +1525,11 @@ function openDet(id) {
   document.getElementById('det-body').innerHTML =
     '<div style="margin-bottom:12px;"><span class="badge '+s.c+'" style="font-size:12px;padding:5px 12px;">'+em+' '+s.l+'</span></div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">'+
-      '<div style="background:var(--bg);border-radius:10px;padding:10px;"><div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;margin-bottom:4px;">Telefon</div><div style="font-size:13px;font-weight:700;">'+o.tel+'</div></div>'+
-      '<div style="background:var(--bg);border-radius:10px;padding:10px;"><div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;margin-bottom:4px;">Mashina</div><div style="font-size:13px;font-weight:700;">'+o.mashina+(o.raqam?' · '+o.raqam:'')+'</div></div>'+
+      '<div style="background:var(--bg);border-radius:10px;padding:10px;"><div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;margin-bottom:4px;">Telefon</div><div style="font-size:13px;font-weight:700;">'+(o.tel||'—')+'</div></div>'+
+      '<div style="background:var(--bg);border-radius:10px;padding:10px;"><div style="font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;margin-bottom:4px;">Mashina</div><div style="font-size:13px;font-weight:700;">'+(o.mashina||'—')+(o.raqam?' · '+o.raqam:'')+'</div></div>'+
+      (o.vin?'<div style="background:#FFF3E0;border-radius:10px;padding:10px;grid-column:1/-1;"><div style="font-size:10px;color:#E65100;font-weight:800;text-transform:uppercase;margin-bottom:4px;">🔑 VIN Code</div><div style="font-size:14px;font-weight:800;font-family:monospace;color:#E65100;">'+o.vin+'</div></div>':'')+
+      (o.salon?'<div style="background:#F3E5F5;border-radius:10px;padding:10px;"><div style="font-size:10px;color:#6A1B9A;font-weight:800;text-transform:uppercase;margin-bottom:4px;">🏢 Avtosalon</div><div style="font-size:13px;font-weight:700;">'+o.salon+'</div></div>':'')+
+      (o.voucher?'<div style="background:#E0F2F1;border-radius:10px;padding:10px;"><div style="font-size:10px;color:#00695C;font-weight:800;text-transform:uppercase;margin-bottom:4px;">🎟️ Voucher</div><div style="font-size:13px;font-weight:700;font-family:monospace;">'+o.voucher+'</div></div>':'')+
     '</div>'+
     (o.muammo?'<div style="background:#FFF8E1;border-radius:10px;padding:10px;margin-bottom:10px;font-size:13px;color:#E65100;">'+o.muammo+'</div>':'')+
     xizmatBlok+
