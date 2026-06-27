@@ -185,10 +185,11 @@ textarea{resize:vertical;min-height:68px;}
   <img class="lock-logo" id="lock-logo" src="" alt="logo">
   <div class="lock-title">Panda Avtoservis</div>
   <div class="lock-sub">Algoritm filiali · Kirish</div>
-  <div class="lock-roles">
+  <div class="lock-roles" style="flex-wrap:wrap;justify-content:center;">
     <button class="lock-role-btn active" id="lr-admin" onclick="selectRole('admin')">👩 Admin</button>
     <button class="lock-role-btn" id="lr-operator" onclick="selectRole('operator')">🔧 Operator</button>
     <button class="lock-role-btn" id="lr-rahbar" onclick="selectRole('rahbar')">👔 Rahbar</button>
+    <button class="lock-role-btn" id="lr-crm" onclick="selectRole('crm')" style="background:rgba(255,165,0,.25);border-color:rgba(255,165,0,.6);">📞 CRM</button>
   </div>
   <div class="lock-pin-dots" id="lock-dots">
     <div class="lock-pin-dot" id="ld0"></div>
@@ -211,6 +212,45 @@ textarea{resize:vertical;min-height:68px;}
   </div>
   <div class="lock-err" id="lock-err"></div>
   <div style="margin-top:16px;font-size:11px;color:rgba(255,255,255,.5);">Barcha rollar uchun kod kerak</div>
+</div>
+
+<!-- CRM PAGE -->
+<div id="crm-ov" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:400;overflow-y:auto;padding-bottom:80px;">
+  <div style="background:linear-gradient(135deg,#E65100,#FF8F00);padding:20px 16px 16px;color:#fff;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-family:Unbounded,sans-serif;font-size:16px;font-weight:900;">📞 CRM</div>
+        <div style="font-size:11px;opacity:.8;margin-top:2px;">Mijozlar bilan aloqa</div>
+      </div>
+      <button onclick="crmLogout()" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:8px 14px;border-radius:10px;font-family:Nunito,sans-serif;font-weight:800;cursor:pointer;">Chiqish</button>
+    </div>
+    <!-- CRM Stats -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;" id="crm-stats"></div>
+  </div>
+  <!-- Search -->
+  <div style="padding:12px 16px;">
+    <input id="crm-search" oninput="renderCRM()" placeholder="🔍 Mijoz ismi yoki telefon..." style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-family:Nunito,sans-serif;font-size:13px;background:var(--bg);box-sizing:border-box;">
+  </div>
+  <!-- Filter -->
+  <div style="padding:0 16px 12px;display:flex;gap:8px;overflow-x:auto;">
+    <button onclick="crmFilter('all')" id="cf-all" style="padding:6px 14px;border-radius:20px;border:2px solid #E65100;background:#E65100;color:#fff;font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">Barchasi</button>
+    <button onclick="crmFilter('pending')" id="cf-pending" style="padding:6px 14px;border-radius:20px;border:2px solid var(--border);background:var(--bg);color:var(--muted);font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">⏳ Kutilmoqda</button>
+    <button onclick="crmFilter('rozi')" id="cf-rozi" style="padding:6px 14px;border-radius:20px;border:2px solid var(--border);background:var(--bg);color:var(--muted);font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">✅ Rozi</button>
+    <button onclick="crmFilter('etiraz')" id="cf-etiraz" style="padding:6px 14px;border-radius:20px;border:2px solid var(--border);background:var(--bg);color:var(--muted);font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">❌ E'tiroz</button>
+  </div>
+  <!-- List -->
+  <div id="crm-list" style="padding:0 16px;"></div>
+  <!-- E'tiroz modal -->
+  <div id="etiraz-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--bg);border-radius:16px;padding:20px;width:100%;max-width:400px;">
+      <div style="font-size:15px;font-weight:900;margin-bottom:12px;">❌ E'tiroz sababi</div>
+      <textarea id="etiraz-text" placeholder="Qisqacha yozing..." style="width:100%;min-height:80px;padding:10px;border:2px solid var(--border);border-radius:10px;font-family:Nunito,sans-serif;font-size:13px;resize:none;box-sizing:border-box;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button onclick="closeEtiraz()" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--bg);font-family:Nunito,sans-serif;font-weight:800;cursor:pointer;">Bekor</button>
+        <button onclick="saveEtiraz()" style="flex:1;padding:10px;background:#c62828;color:#fff;border:none;border-radius:10px;font-family:Nunito,sans-serif;font-weight:800;cursor:pointer;">Saqlash</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- HEADER -->
@@ -347,9 +387,14 @@ textarea{resize:vertical;min-height:68px;}
       <button class="btn-s" id="hb-t" onclick="setH('today')">Bugun</button>
       <button class="btn-s" id="hb-m" onclick="setH('month')" style="background:var(--gd);color:#fff;">Bu oy</button>
       <button class="btn-s" id="hb-a" onclick="setH('all')">Hammasi</button>
-      <button class="btn-s" onclick="exportExcel()" id="excel-export-btn" style="background:#1B5E20;color:#fff;margin-left:auto;display:none;">📥 Excel</button>
+      <button class="btn-s" onclick="exportExcel1()" id="excel-export-btn" style="background:#1B5E20;color:#fff;margin-left:auto;display:none;">📥 Zaявka 1 Excel</button>
+      <button class="btn-s" onclick="exportExcel2()" id="excel-export-btn2" style="background:#E65100;color:#fff;display:none;">🏢 Zaявka 2 Excel</button>
     </div>
     <div class="sgrd" id="sgrd"></div>
+    <div class="card" id="crm-hisobot-card" style="display:none;">
+      <div class="ct">📞 CRM — Mijozlar bilan aloqa</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;" id="crm-hisobot-stats"></div>
+    </div>
     <div class="card">
       <div class="ct">💳 Tolov turlari</div>
       <div id="tolov-stats"></div>
@@ -498,7 +543,7 @@ async function loadFromSupabase() {
           hasDiag: r.has_diag, diagP: r.diag_p, diag: r.diag || '',
           xT: r.x_total, jami: r.jami, status: r.status,
           tolov: r.tolov || '', nakType: r.nak_type || 'full',
-          hist: r.hist || [], zapchastlar: r.zapchastlar || [], zT: r.z_total || 0, vin: r.vin || '', salon: r.salon || '', voucher: r.voucher || '', tip: r.tip || 'z1', ts: r.ts
+          hist: r.hist || [], zapchastlar: r.zapchastlar || [], zT: r.z_total || 0, vin: r.vin || '', salon: r.salon || '', voucher: r.voucher || '', tip: r.tip || 'z1', crmStatus: r.crm_status || 'pending', crmNote: r.crm_note || '', ts: r.ts
         };
       });
       // Lokal va Supabase ma'lumotlarni birlashtirish (Supabase ustunlik qiladi)
@@ -580,7 +625,7 @@ async function updateInSupabase(order) {
     hist: order.hist || [], xizmatlar: order.xizmatlar || [],
     xstr: order.xStr || '', has_diag: order.hasDiag || false,
     diag_p: order.diagP || 0, x_total: order.xT || 0,
-    diag: order.diag || '', zapchastlar: order.zapchastlar || [], z_total: order.zT || 0, vin: order.vin || '', salon: order.salon || '', voucher: order.voucher || '', tip: order.tip || 'z1', ts: order.ts
+    diag: order.diag || '', zapchastlar: order.zapchastlar || [], z_total: order.zT || 0, vin: order.vin || '', salon: order.salon || '', voucher: order.voucher || '', tip: order.tip || 'z1', crm_status: order.crmStatus || 'pending', crm_note: order.crmNote || '', ts: order.ts
   };
   try {
     var res = await fetch(SB_URL + '/rest/v1/zayavkalar?id=eq.' + encodeURIComponent(order.id), {
@@ -748,22 +793,92 @@ function renderStats() {
   }).join('') : '<p style="color:var(--muted);font-size:13px;">Xizmatlar yoq</p>';
 
   // Excel tugmasi
+  // CRM stats in hisobot
+  var crmStatsEl = document.getElementById('crm-hisobot-stats');
+  if (crmStatsEl && currentRole === 'rahbar') {
+    var mijozlar2 = getMijozlar ? getMijozlar() : [];
+    var rozi2 = mijozlar2.filter(function(m){return m.crmStatus==='rozi';}).length;
+    var etiraz2 = mijozlar2.filter(function(m){return m.crmStatus==='etiraz';}).length;
+    var pending2 = mijozlar2.filter(function(m){return m.crmStatus==='pending';}).length;
+    crmStatsEl.innerHTML =
+      '<div style="background:#E8F5E9;border-radius:10px;padding:10px;text-align:center;"><div style="font-size:20px;">✅</div><div style="font-size:18px;font-weight:900;color:#2E7D32;">'+rozi2+'</div><div style="font-size:10px;color:#2E7D32;font-weight:700;">Rozi</div></div>' +
+      '<div style="background:#FFEBEE;border-radius:10px;padding:10px;text-align:center;"><div style="font-size:20px;">❌</div><div style="font-size:18px;font-weight:900;color:#c62828;">'+etiraz2+'</div><div style="font-size:10px;color:#c62828;font-weight:700;">E'tiroz</div></div>' +
+      '<div style="background:#FFF3E0;border-radius:10px;padding:10px;text-align:center;"><div style="font-size:20px;">⏳</div><div style="font-size:18px;font-weight:900;color:#E65100;">'+pending2+'</div><div style="font-size:10px;color:#E65100;font-weight:700;">Kutilmoqda</div></div>';
+  }
   var exBtn = document.getElementById('excel-export-btn');
-  if (exBtn) exBtn.style.display = (currentRole==='rahbar') ? 'inline-block' : 'none';
+  var exBtn2 = document.getElementById('excel-export-btn2');
+  var showEx = (currentRole==='rahbar');
+  if (exBtn) exBtn.style.display = showEx ? 'inline-block' : 'none';
+  if (exBtn2) exBtn2.style.display = showEx ? 'inline-block' : 'none';
+  var crmCard = document.getElementById('crm-hisobot-card');
+  if (crmCard) crmCard.style.display = showEx ? 'block' : 'none';
 }
 
-function exportExcel() {
-  var rows = [['ID','Ismi','Tel','Mashina','Raqam','Muammo','Status','Tolov','Jami','Sana']];
-  orders.forEach(function(o){
-    rows.push([o.id,o.ismi,o.tel,o.mashina,o.raqam||'',o.muammo||'',o.status,o.tolov||'',o.jami||0,o.sana]);
-  });
-  var csv = rows.map(function(r){return r.map(function(c){return '"'+(c||'').toString().replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+function csvDownload(rows, filename) {
+  var csv = rows.map(function(r){
+    return r.map(function(c){
+      return '"'+(c||'').toString().replace(/"/g,'""')+'"';
+    }).join(',');
+  }).join('\n');
   var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
-  a.href = url; a.download = 'panda-zaявkalar.csv'; a.click();
+  a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
 }
+
+function exportExcel1() {
+  // Faqat Zaявka 1 (oddiy mijozlar)
+  var z1 = orders.filter(function(o){ return o.tip !== 'z2'; });
+  if (!z1.length) { toast('Zaявка 1 yoq!'); return; }
+  var rows = [['№','Sana','Zaявka ID','Ismi','Telefon','Mashina','Raqam','Usta haqqi','Zapchastlar','Jami','Status','Tolov']];
+  z1.forEach(function(o, i){
+    var xT = (o.xizmatlar||[]).reduce(function(s,x){return s+(x.price||0);},0);
+    var zT = (o.zapchastlar||[]).reduce(function(s,z){return s+(z.price||0);},0);
+    rows.push([
+      i+1, o.sana, o.id,
+      o.ismi||'', o.tel||'', o.mashina||'', o.raqam||'',
+      xT, zT, o.jami||0,
+      o.status, o.tolov||''
+    ]);
+  });
+  // Jami qator
+  var totalJami = z1.reduce(function(s,o){return s+(o.jami||0);},0);
+  var totalX = z1.reduce(function(s,o){return s+(o.xT||0);},0);
+  var totalZ = z1.reduce(function(s,o){return s+(o.zT||0);},0);
+  rows.push(['','','','','','','JAMI:', totalX, totalZ, totalJami, '', '']);
+  var d = new Date();
+  csvDownload(rows, 'panda-zaявka1-'+d.getFullYear()+'-'+(d.getMonth()+1)+'.csv');
+  toast('✅ Zaявка 1 Excel yuklandi!');
+}
+
+function exportExcel2() {
+  // Faqat Zaявka 2 (avtosalon/voucher)
+  var z2 = orders.filter(function(o){ return o.tip === 'z2'; });
+  if (!z2.length) { toast('Zaявка 2 yoq!'); return; }
+  var rows = [['№','Sana','Zaявka ID','VIN Code','Ismi','Mashina','Usta haqqi','Zapchastlar','Jami','Status','Tolov','Avtosalon','Voucher']];
+  z2.forEach(function(o, i){
+    var xT = (o.xizmatlar||[]).reduce(function(s,x){return s+(x.price||0);},0);
+    var zT = (o.zapchastlar||[]).reduce(function(s,z){return s+(z.price||0);},0);
+    rows.push([
+      i+1, o.sana, o.id,
+      o.vin||'', o.ismi||'', o.mashina||'',
+      xT, zT, o.jami||0,
+      o.status, o.tolov||'',
+      o.salon||'', o.voucher||''
+    ]);
+  });
+  // Jami qator
+  var totalJami2 = z2.reduce(function(s,o){return s+(o.jami||0);},0);
+  var totalX2 = z2.reduce(function(s,o){return s+(o.xT||0);},0);
+  var totalZ2 = z2.reduce(function(s,o){return s+(o.zT||0);},0);
+  rows.push(['','','','','','JAMI:', totalX2, totalZ2, totalJami2, '', '', '', '']);
+  var d = new Date();
+  csvDownload(rows, 'panda-zaявka2-salon-'+d.getFullYear()+'-'+(d.getMonth()+1)+'.csv');
+  toast('✅ Zaявка 2 Excel yuklandi!');
+}
+
+function exportExcel() { exportExcel1(); }
 
 // ═══ SOZLAMALAR ═══
 function saveCodes() {
@@ -1022,6 +1137,177 @@ function removeZ(btn) {
   openDet(id);
 }
 
+// ═══ CRM FUNCTIONS ═══
+var crmFilterMode = 'all';
+var etirazTargetId = null;
+
+function crmLogout() {
+  document.getElementById('crm-ov').style.display = 'none';
+  currentRole = 'admin';
+  lockRole = 'admin';
+  lockInput = '';
+  updateLockDots();
+  document.getElementById('lock-err').textContent = '';
+  ['admin','operator','rahbar','crm'].forEach(function(x) {
+    var el = document.getElementById('lr-'+x);
+    if (el) el.classList.remove('active');
+  });
+  var adminBtn = document.getElementById('lr-admin');
+  if (adminBtn) adminBtn.classList.add('active');
+  document.getElementById('lock').classList.add('on');
+}
+
+function crmFilter(mode) {
+  crmFilterMode = mode;
+  ['all','pending','rozi','etiraz'].forEach(function(m) {
+    var btn = document.getElementById('cf-'+m);
+    if (!btn) return;
+    if (m === mode) {
+      btn.style.background = '#E65100'; btn.style.color = '#fff'; btn.style.borderColor = '#E65100';
+    } else {
+      btn.style.background = 'var(--bg)'; btn.style.color = 'var(--muted)'; btn.style.borderColor = 'var(--border)';
+    }
+  });
+  renderCRM();
+}
+
+function getMijozlar() {
+  // Telefon raqami bo'yicha mijozlarni birlashtirish
+  var map = {};
+  orders.forEach(function(o) {
+    var key = (o.tel || o.vin || o.id).trim();
+    if (!map[key]) {
+      map[key] = {
+        ismi: o.ismi || o.vin || '—',
+        tel: o.tel || '',
+        vin: o.vin || '',
+        zaявkalar: [],
+        crmStatus: o.crmStatus || 'pending',
+        crmNote: o.crmNote || '',
+        lastId: o.id
+      };
+    }
+    map[key].zaявkalar.push(o);
+    // Eng oxirgi zaявka ma'lumotlari
+    if (!map[key].lastTs || o.ts > map[key].lastTs) {
+      map[key].lastTs = o.ts;
+      map[key].lastId = o.id;
+      map[key].lastSana = o.sana;
+      map[key].lastStatus = o.status;
+      map[key].lastJami = o.jami || 0;
+      map[key].crmStatus = o.crmStatus || map[key].crmStatus || 'pending';
+      map[key].crmNote = o.crmNote || map[key].crmNote || '';
+    }
+  });
+  return Object.values(map);
+}
+
+function renderCRM() {
+  var q = (document.getElementById('crm-search') ? document.getElementById('crm-search').value || '' : '').toLowerCase();
+  var mijozlar = getMijozlar();
+
+  // Stats
+  var total = mijozlar.length;
+  var rozi = mijozlar.filter(function(m){return m.crmStatus==='rozi';}).length;
+  var etiraz = mijozlar.filter(function(m){return m.crmStatus==='etiraz';}).length;
+  var pending = mijozlar.filter(function(m){return m.crmStatus==='pending';}).length;
+
+  var statsEl = document.getElementById('crm-stats');
+  if (statsEl) statsEl.innerHTML =
+    crmStat('👥', 'Jami', total, '#fff', 'rgba(255,255,255,.2)') +
+    crmStat('⏳', 'Kutilmoqda', pending, '#FFF9C4', 'rgba(255,235,59,.3)') +
+    crmStat('✅', 'Rozi', rozi, '#C8E6C9', 'rgba(76,175,80,.3)') +
+    crmStat('❌', 'E'tiroz', etiraz, '#FFCDD2', 'rgba(244,67,54,.3)');
+
+  // Filter
+  var filtered = mijozlar.filter(function(m) {
+    var matchQ = !q || (m.ismi||'').toLowerCase().indexOf(q)>-1 || (m.tel||'').indexOf(q)>-1 || (m.vin||'').toLowerCase().indexOf(q)>-1;
+    var matchF = crmFilterMode==='all' || m.crmStatus===crmFilterMode;
+    return matchQ && matchF;
+  });
+
+  var listEl = document.getElementById('crm-list');
+  if (!listEl) return;
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:14px;font-weight:700;">Mijoz topilmadi</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(function(m) {
+    var statusColor = m.crmStatus==='rozi' ? '#2E7D32' : m.crmStatus==='etiraz' ? '#c62828' : '#E65100';
+    var statusBg = m.crmStatus==='rozi' ? '#E8F5E9' : m.crmStatus==='etiraz' ? '#FFEBEE' : '#FFF3E0';
+    var statusIcon = m.crmStatus==='rozi' ? '✅ Rozi' : m.crmStatus==='etiraz' ? '❌ E'tiroz' : '⏳ Kutilmoqda';
+    var totalSum = m.zaявkalar.reduce(function(s,o){return s+(o.jami||0);},0);
+
+    return '<div style="background:var(--bg);border:2px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">' +
+        '<div>' +
+          '<div style="font-size:15px;font-weight:900;color:var(--text);">'+m.ismi+'</div>' +
+          (m.tel?'<div style="font-size:12px;color:var(--muted);margin-top:2px;">📞 '+m.tel+'</div>':'') +
+          (m.vin?'<div style="font-size:11px;color:#E65100;font-family:monospace;margin-top:2px;">VIN: '+m.vin+'</div>':'') +
+        '</div>' +
+        '<span style="background:'+statusBg+';color:'+statusColor+';font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;">'+statusIcon+'</span>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">' +
+        '<span style="background:var(--gl);color:var(--gd);font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;">📋 '+m.zaявkalar.length+' ta zaявka</span>' +
+        '<span style="background:#E3F2FD;color:#1565C0;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;">💰 '+fmt(totalSum)+' som</span>' +
+        '<span style="background:var(--bg);color:var(--muted);font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);">🕐 '+( m.lastSana||'—' )+'</span>' +
+      '</div>' +
+      (m.crmNote?'<div style="background:#FFF3E0;border-left:3px solid #E65100;padding:8px 10px;border-radius:6px;font-size:12px;color:#E65100;margin-bottom:10px;">💬 '+m.crmNote+'</div>':'') +
+      '<div style="display:flex;gap:6px;">' +
+        '<button onclick="setCRMStatus(''+m.tel||m.vin+'','rozi')" style="flex:1;padding:9px;border-radius:10px;border:2px solid '+(m.crmStatus==='rozi'?'#2E7D32':'var(--border)')+';background:'+(m.crmStatus==='rozi'?'#E8F5E9':'var(--bg)')+';color:'+(m.crmStatus==='rozi'?'#2E7D32':'var(--muted)')+';font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;">✅ Rozi</button>' +
+        '<button onclick="openEtiraz(''+m.tel||m.vin+'')" style="flex:1;padding:9px;border-radius:10px;border:2px solid '+(m.crmStatus==='etiraz'?'#c62828':'var(--border)')+';background:'+(m.crmStatus==='etiraz'?'#FFEBEE':'var(--bg)')+';color:'+(m.crmStatus==='etiraz'?'#c62828':'var(--muted)')+';font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;">❌ E'tiroz</button>' +
+        '<button onclick="setCRMStatus(''+m.tel||m.vin+'','pending')" style="padding:9px 12px;border-radius:10px;border:2px solid var(--border);background:var(--bg);color:var(--muted);font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;">⏳</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function crmStat(icon, label, val, color, bg) {
+  return '<div style="background:'+bg+';border-radius:10px;padding:8px;text-align:center;">' +
+    '<div style="font-size:18px;">'+icon+'</div>' +
+    '<div style="font-size:16px;font-weight:900;color:'+color+';">'+val+'</div>' +
+    '<div style="font-size:9px;color:'+color+';opacity:.8;font-weight:700;">'+label+'</div>' +
+  '</div>';
+}
+
+function setCRMStatus(key, status, note) {
+  // Apply to all orders with this tel/vin
+  orders.forEach(function(o) {
+    var k = (o.tel || o.vin || o.id).trim();
+    if (k === key) {
+      o.crmStatus = status;
+      if (note !== undefined) o.crmNote = note;
+      updateInSupabase(o);
+    }
+  });
+  save();
+  renderCRM();
+  toast(status === 'rozi' ? '✅ Rozi deb belgilandi!' : status === 'etiraz' ? '❌ E'tiroz saqlandi!' : '⏳ Kutilmoqda');
+}
+
+function openEtiraz(key) {
+  etirazTargetId = key;
+  // Pre-fill if exists
+  var found = orders.find(function(o){ return (o.tel||o.vin||o.id).trim() === key; });
+  document.getElementById('etiraz-text').value = found ? (found.crmNote || '') : '';
+  var modal = document.getElementById('etiraz-modal');
+  modal.style.display = 'flex';
+}
+
+function closeEtiraz() {
+  document.getElementById('etiraz-modal').style.display = 'none';
+  etirazTargetId = null;
+}
+
+function saveEtiraz() {
+  var note = document.getElementById('etiraz-text').value.trim();
+  if (!note) { toast('E'tiroz sababini yozing!'); return; }
+  setCRMStatus(etirazTargetId, 'etiraz', note);
+  closeEtiraz();
+}
+
 window.onload = function() {
   localStorage.removeItem('px'); xizmatlar = [];
   document.getElementById('hdr-logo').src = LOGO_SRC;
@@ -1043,10 +1329,12 @@ function selectRole(r) {
   lockInput = '';
   updateLockDots();
   document.getElementById('lock-err').textContent = '';
-  ['admin','operator','rahbar'].forEach(function(x) {
-    document.getElementById('lr-'+x).classList.remove('active');
+  ['admin','operator','rahbar','crm'].forEach(function(x) {
+    var el = document.getElementById('lr-'+x);
+    if (el) el.classList.remove('active');
   });
-  document.getElementById('lr-'+r).classList.add('active');
+  var active = document.getElementById('lr-'+r);
+  if (active) active.classList.add('active');
 }
 
 function lockPress(n) {
@@ -1071,7 +1359,7 @@ function updateLockDots() {
   }
 }
 
-function getCodes() { return {ad:'1234',op:'0987',rh:'4044'}; }
+function getCodes() { return {ad:'1234',op:'0987',rh:'4044',crm:'5555'}; }
 
 function checkLock() {
   var codes = getCodes();
@@ -1081,8 +1369,10 @@ function checkLock() {
     unlock('operator');
   } else if (lockRole === 'rahbar' && lockInput === codes.rh) {
     unlock('rahbar');
+  } else if (lockRole === 'crm' && lockInput === (codes.crm || '5555')) {
+    unlock('crm');
   } else {
-    document.getElementById('lock-err').textContent = 'Kod notogri! Qaytadan tering.';
+    document.getElementById('lock-err').textContent = 'Kod noto'g'ri! Qaytadan tering.';
     lockInput = '';
     updateLockDots();
   }
@@ -1093,6 +1383,13 @@ function unlock(role) {
   lockInput = '';
   updateLockDots();
   document.getElementById('lock').classList.remove('on');
+
+  if (role === 'crm') {
+    document.getElementById('crm-ov').style.display = 'block';
+    setTimeout(function() { loadFromSupabase(); renderCRM(); }, 500);
+    return;
+  }
+
   var roleBadge = document.getElementById('rol-show');
   if (role === 'admin') {
     roleBadge.textContent = '👩 Admin ▾';
@@ -1109,7 +1406,6 @@ function unlock(role) {
   renderStats();
   renderZ();
   if (role === 'rahbar') renderXcfg();
-  // Load from Supabase in background - don't block login
   setTimeout(function() { loadFromSupabase(); }, 500);
 }
 
