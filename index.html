@@ -236,14 +236,14 @@ textarea{resize:vertical;min-height:68px;}
     <button onclick="crmFilter('all')" id="cf-all" style="padding:6px 14px;border-radius:20px;border:2px solid #E65100;background:#E65100;color:#fff;font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">Barchasi</button>
     <button onclick="crmFilter('pending')" id="cf-pending" style="padding:6px 14px;border-radius:20px;border:2px solid var(--border);background:var(--bg);color:var(--muted);font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">⏳ Kutilmoqda</button>
     <button onclick="crmFilter('rozi')" id="cf-rozi" style="padding:6px 14px;border-radius:20px;border:2px solid var(--border);background:var(--bg);color:var(--muted);font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">✅ Rozi</button>
-    <button onclick="crmFilter('etiraz')" id="cf-etiraz" style="padding:6px 14px;border-radius:20px;border:2px solid var(--border);background:var(--bg);color:var(--muted);font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">❌ E'tiroz</button>
+    <button onclick="crmFilter('etiraz')" id="cf-etiraz" style="padding:6px 14px;border-radius:20px;border:2px solid var(--border);background:var(--bg);color:var(--muted);font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">❌ Eʼtiroz</button>
   </div>
   <!-- List -->
   <div id="crm-list" style="padding:0 16px;"></div>
-  <!-- E'tiroz modal -->
+  <!-- Eʼtiroz modal -->
   <div id="etiraz-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;align-items:center;justify-content:center;padding:20px;">
     <div style="background:var(--bg);border-radius:16px;padding:20px;width:100%;max-width:400px;">
-      <div style="font-size:15px;font-weight:900;margin-bottom:12px;">❌ E'tiroz sababi</div>
+      <div style="font-size:15px;font-weight:900;margin-bottom:12px;">❌ Eʼtiroz sababi</div>
       <textarea id="etiraz-text" placeholder="Qisqacha yozing..." style="width:100%;min-height:80px;padding:10px;border:2px solid var(--border);border-radius:10px;font-family:Nunito,sans-serif;font-size:13px;resize:none;box-sizing:border-box;"></textarea>
       <div style="display:flex;gap:8px;margin-top:12px;">
         <button onclick="closeEtiraz()" style="flex:1;padding:10px;border:2px solid var(--border);border-radius:10px;background:var(--bg);font-family:Nunito,sans-serif;font-weight:800;cursor:pointer;">Bekor</button>
@@ -802,7 +802,7 @@ function renderStats() {
     var pending2 = mijozlar2.filter(function(m){return m.crmStatus==='pending';}).length;
     crmStatsEl.innerHTML =
       '<div style="background:#E8F5E9;border-radius:10px;padding:10px;text-align:center;"><div style="font-size:20px;">✅</div><div style="font-size:18px;font-weight:900;color:#2E7D32;">'+rozi2+'</div><div style="font-size:10px;color:#2E7D32;font-weight:700;">Rozi</div></div>' +
-      '<div style="background:#FFEBEE;border-radius:10px;padding:10px;text-align:center;"><div style="font-size:20px;">❌</div><div style="font-size:18px;font-weight:900;color:#c62828;">'+etiraz2+'</div><div style="font-size:10px;color:#c62828;font-weight:700;">E'tiroz</div></div>' +
+      '<div style="background:#FFEBEE;border-radius:10px;padding:10px;text-align:center;"><div style="font-size:20px;">❌</div><div style="font-size:18px;font-weight:900;color:#c62828;">'+etiraz2+'</div><div style="font-size:10px;color:#c62828;font-weight:700;">Eʼtiroz</div></div>' +
       '<div style="background:#FFF3E0;border-radius:10px;padding:10px;text-align:center;"><div style="font-size:20px;">⏳</div><div style="font-size:18px;font-weight:900;color:#E65100;">'+pending2+'</div><div style="font-size:10px;color:#E65100;font-weight:700;">Kutilmoqda</div></div>';
   }
   var exBtn = document.getElementById('excel-export-btn');
@@ -1217,7 +1217,7 @@ function renderCRM() {
     crmStat('👥', 'Jami', total, '#fff', 'rgba(255,255,255,.2)') +
     crmStat('⏳', 'Kutilmoqda', pending, '#FFF9C4', 'rgba(255,235,59,.3)') +
     crmStat('✅', 'Rozi', rozi, '#C8E6C9', 'rgba(76,175,80,.3)') +
-    crmStat('❌', 'E'tiroz', etiraz, '#FFCDD2', 'rgba(244,67,54,.3)');
+    crmStat('❌', 'E\u02BCtiroz', etiraz, '#FFCDD2', 'rgba(244,67,54,.3)');
 
   // Filter
   var filtered = mijozlar.filter(function(m) {
@@ -1237,7 +1237,7 @@ function renderCRM() {
   listEl.innerHTML = filtered.map(function(m) {
     var statusColor = m.crmStatus==='rozi' ? '#2E7D32' : m.crmStatus==='etiraz' ? '#c62828' : '#E65100';
     var statusBg = m.crmStatus==='rozi' ? '#E8F5E9' : m.crmStatus==='etiraz' ? '#FFEBEE' : '#FFF3E0';
-    var statusIcon = m.crmStatus==='rozi' ? '✅ Rozi' : m.crmStatus==='etiraz' ? '❌ E'tiroz' : '⏳ Kutilmoqda';
+    var statusIcon = m.crmStatus==='rozi' ? '✅ Rozi' : m.crmStatus==='etiraz' ? '❌ E\u02BCtiroz' : '⏳ Kutilmoqda';
     var totalSum = m.zaявkalar.reduce(function(s,o){return s+(o.jami||0);},0);
 
     return '<div style="background:var(--bg);border:2px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">' +
@@ -1257,7 +1257,7 @@ function renderCRM() {
       (m.crmNote?'<div style="background:#FFF3E0;border-left:3px solid #E65100;padding:8px 10px;border-radius:6px;font-size:12px;color:#E65100;margin-bottom:10px;">💬 '+m.crmNote+'</div>':'') +
       '<div style="display:flex;gap:6px;">' +
         '<button onclick="setCRMStatus(''+m.tel||m.vin+'','rozi')" style="flex:1;padding:9px;border-radius:10px;border:2px solid '+(m.crmStatus==='rozi'?'#2E7D32':'var(--border)')+';background:'+(m.crmStatus==='rozi'?'#E8F5E9':'var(--bg)')+';color:'+(m.crmStatus==='rozi'?'#2E7D32':'var(--muted)')+';font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;">✅ Rozi</button>' +
-        '<button onclick="openEtiraz(''+m.tel||m.vin+'')" style="flex:1;padding:9px;border-radius:10px;border:2px solid '+(m.crmStatus==='etiraz'?'#c62828':'var(--border)')+';background:'+(m.crmStatus==='etiraz'?'#FFEBEE':'var(--bg)')+';color:'+(m.crmStatus==='etiraz'?'#c62828':'var(--muted)')+';font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;">❌ E'tiroz</button>' +
+        '<button onclick="openEtiraz(''+m.tel||m.vin+'')" style="flex:1;padding:9px;border-radius:10px;border:2px solid '+(m.crmStatus==='etiraz'?'#c62828':'var(--border)')+';background:'+(m.crmStatus==='etiraz'?'#FFEBEE':'var(--bg)')+';color:'+(m.crmStatus==='etiraz'?'#c62828':'var(--muted)')+';font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;">❌ Eʼtiroz</button>' +
         '<button onclick="setCRMStatus(''+m.tel||m.vin+'','pending')" style="padding:9px 12px;border-radius:10px;border:2px solid var(--border);background:var(--bg);color:var(--muted);font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;">⏳</button>' +
       '</div>' +
     '</div>';
@@ -1284,7 +1284,7 @@ function setCRMStatus(key, status, note) {
   });
   save();
   renderCRM();
-  toast(status === 'rozi' ? '✅ Rozi deb belgilandi!' : status === 'etiraz' ? '❌ E'tiroz saqlandi!' : '⏳ Kutilmoqda');
+  toast(status === 'rozi' ? '✅ Rozi deb belgilandi!' : status === 'etiraz' ? '❌ E\u02BCtiroz saqlandi!' : '⏳ Kutilmoqda');
 }
 
 function openEtiraz(key) {
@@ -1303,7 +1303,7 @@ function closeEtiraz() {
 
 function saveEtiraz() {
   var note = document.getElementById('etiraz-text').value.trim();
-  if (!note) { toast('E'tiroz sababini yozing!'); return; }
+  if (!note) { toast('E\u02BCtiroz sababini yozing!'); return; }
   setCRMStatus(etirazTargetId, 'etiraz', note);
   closeEtiraz();
 }
