@@ -248,6 +248,35 @@ textarea{resize:vertical;min-height:68px;}
   </div>
 </div>
 
+<!-- HISOBOT MODAL -->
+<div id="hisobot-modal-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--bg);border-radius:18px;padding:20px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="font-size:16px;font-weight:900;margin-bottom:16px;">📊 Hisobot shakli tanlang</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button onclick="setHisobotType('kunlik')" id="htype-kunlik" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--g);background:var(--gl);color:var(--gd);font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">📅 Kunlik</button>
+      <button onclick="setHisobotType('oylik')" id="htype-oylik" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--bg);color:var(--muted);font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">📆 Oylik</button>
+      <button onclick="setHisobotType('jami')" id="htype-jami" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--bg);color:var(--muted);font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">📋 Jami</button>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Sana oraligi</div>
+      <div style="display:flex;gap:8px;">
+        <div style="flex:1;"><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Dan:</div><input type="date" id="h-from" style="width:100%;padding:8px 10px;border:2px solid var(--border);border-radius:10px;font-family:Nunito,sans-serif;font-size:13px;background:var(--bg);box-sizing:border-box;"></div>
+        <div style="flex:1;"><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Gacha:</div><input type="date" id="h-to" style="width:100%;padding:8px 10px;border:2px solid var(--border);border-radius:10px;font-family:Nunito,sans-serif;font-size:13px;background:var(--bg);box-sizing:border-box;"></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+        <button onclick="setDateRange('today')" style="padding:5px 12px;border-radius:20px;border:2px solid var(--border);background:var(--bg);font-family:Nunito,sans-serif;font-size:11px;font-weight:800;cursor:pointer;color:var(--muted);">Bugun</button>
+        <button onclick="setDateRange('week')" style="padding:5px 12px;border-radius:20px;border:2px solid var(--border);background:var(--bg);font-family:Nunito,sans-serif;font-size:11px;font-weight:800;cursor:pointer;color:var(--muted);">Bu hafta</button>
+        <button onclick="setDateRange('month')" style="padding:5px 12px;border-radius:20px;border:2px solid var(--border);background:var(--bg);font-family:Nunito,sans-serif;font-size:11px;font-weight:800;cursor:pointer;color:var(--muted);">Bu oy</button>
+        <button onclick="setDateRange('all')" style="padding:5px 12px;border-radius:20px;border:2px solid var(--border);background:var(--bg);font-family:Nunito,sans-serif;font-size:11px;font-weight:800;cursor:pointer;color:var(--muted);">Hammasi</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeHisobotModal()" style="flex:1;padding:11px;border:2px solid var(--border);border-radius:12px;background:var(--bg);font-family:Nunito,sans-serif;font-weight:800;cursor:pointer;">Bekor</button>
+      <button onclick="generateHisobot()" style="flex:2;padding:11px;background:linear-gradient(120deg,#007A2F,#00C853);color:#fff;border:none;border-radius:12px;font-family:Nunito,sans-serif;font-weight:800;cursor:pointer;font-size:14px;">📥 Excel yuklash</button>
+    </div>
+  </div>
+</div>
+
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-row">
@@ -804,30 +833,141 @@ function csvDownload(rows, filename) {
   URL.revokeObjectURL(url);
 }
 
-function exportExcel1() {
-  // Faqat Zaявka 1 (oddiy mijozlar)
-  var z1 = orders.filter(function(o){ return o.tip !== 'z2'; });
-  if (!z1.length) { toast('Zaявка 1 yoq!'); return; }
-  var rows = [['№','Sana','Zaявka ID','Ismi','Telefon','Mashina','Raqam','Usta haqqi','Zapchastlar','Jami','Status','Tolov']];
-  z1.forEach(function(o, i){
-    var xT = (o.xizmatlar||[]).reduce(function(s,x){return s+(x.price||0);},0);
-    var zT = (o.zapchastlar||[]).reduce(function(s,z){return s+(z.price||0);},0);
-    rows.push([
-      i+1, o.sana, o.id,
-      o.ismi||'', o.tel||'', o.mashina||'', o.raqam||'',
-      xT, zT, o.jami||0,
-      o.status, o.tolov||''
+// ═══ HISOBOT EXPORT ═══
+var hisobotType = 'kunlik';
+
+function openHisobotModal() {
+  var now = new Date();
+  var from = new Date(now.getFullYear(), now.getMonth(), 1);
+  document.getElementById('h-from').value = from.toISOString().slice(0,10);
+  document.getElementById('h-to').value = now.toISOString().slice(0,10);
+  document.getElementById('hisobot-modal-ov').style.display = 'flex';
+}
+function closeHisobotModal() {
+  document.getElementById('hisobot-modal-ov').style.display = 'none';
+}
+function setHisobotType(t) {
+  hisobotType = t;
+  ['kunlik','oylik','jami'].forEach(function(x) {
+    var b = document.getElementById('htype-'+x);
+    if (!b) return;
+    if (x===t) { b.style.border='2px solid var(--g)'; b.style.background='var(--gl)'; b.style.color='var(--gd)'; }
+    else { b.style.border='2px solid var(--border)'; b.style.background='var(--bg)'; b.style.color='var(--muted)'; }
+  });
+}
+function setDateRange(r) {
+  var now = new Date();
+  var y=now.getFullYear(), m=now.getMonth(), d=now.getDate();
+  var from, to=now;
+  if (r==='today') from=new Date(y,m,d);
+  else if (r==='week') from=new Date(y,m,d-now.getDay());
+  else if (r==='month') from=new Date(y,m,1);
+  else { from=new Date(2020,0,1); to=new Date(2099,11,31); }
+  document.getElementById('h-from').value=from.toISOString().slice(0,10);
+  document.getElementById('h-to').value=to.toISOString().slice(0,10);
+}
+function parseODate(o) {
+  return o.ts ? new Date(o.ts) : new Date(o.sana);
+}
+function fmtDate(d) {
+  return d.getDate().toString().padStart(2,'0')+'.'+
+    (d.getMonth()+1).toString().padStart(2,'0')+'.'+d.getFullYear();
+}
+function generateHisobot() {
+  var fv=document.getElementById('h-from').value;
+  var tv=document.getElementById('h-to').value;
+  if (!fv||!tv) { toast('Sanani tanlang!'); return; }
+  var from=new Date(fv), to=new Date(tv); to.setHours(23,59,59,999);
+  var filtered=orders.filter(function(o){
+    var d=parseODate(o); return d>=from&&d<=to&&o.tip!=='z2';
+  });
+  if (!filtered.length) { toast('Bu oraliqda zaявka yoq!'); return; }
+  closeHisobotModal();
+  if (hisobotType==='kunlik') doKunlik(filtered,fv,tv);
+  else if (hisobotType==='oylik') doOylik(filtered);
+  else doJami(filtered,fv,tv);
+}
+function doKunlik(filtered, fv, tv) {
+  var dayMap={};
+  filtered.forEach(function(o){
+    var k=parseODate(o).toISOString().slice(0,10);
+    if(!dayMap[k]) dayMap[k]=[];
+    dayMap[k].push(o);
+  });
+  var rows=[['Sana','Buyurtmalar soni',"To'langan buyurtmalar",'Jami summa (Tolandi)','Usta haqqi (Tolandi)','Zapchastlar (Tolandi)','Jami summa (barcha status)']];
+  var cur=new Date(fv), end=new Date(tv);
+  while(cur<=end) {
+    var k=cur.toISOString().slice(0,10);
+    var day=dayMap[k]||[];
+    var paid=day.filter(function(o){return o.status==='Tolandi'||o.status==='BekorTolandi';});
+    rows.push([fmtDate(cur), day.length, paid.length,
+      paid.reduce(function(s,o){return s+(o.jami||0);},0),
+      paid.reduce(function(s,o){return s+(o.xT||0);},0),
+      paid.reduce(function(s,o){return s+(o.zT||0);},0),
+      day.reduce(function(s,o){return s+(o.jami||0);},0)
+    ]);
+    cur.setDate(cur.getDate()+1);
+  }
+  var tp=filtered.filter(function(o){return o.status==='Tolandi'||o.status==='BekorTolandi';});
+  rows.push(['JAMI:',filtered.length,tp.length,
+    tp.reduce(function(s,o){return s+(o.jami||0);},0),
+    tp.reduce(function(s,o){return s+(o.xT||0);},0),
+    tp.reduce(function(s,o){return s+(o.zT||0);},0),
+    filtered.reduce(function(s,o){return s+(o.jami||0);},0)
+  ]);
+  csvDownload(rows,'panda-kunlik-'+fv+'_'+tv+'.csv');
+  toast('✅ Kunlik hisobot yuklandi!');
+}
+function doOylik(filtered) {
+  var mMap={};
+  filtered.forEach(function(o){
+    var d=parseODate(o);
+    var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    if(!mMap[k]) mMap[k]=[];
+    mMap[k].push(o);
+  });
+  var months=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+  var rows=[['Oy','Buyurtmalar soni',"To'langan",'Jami (Tolandi)','Usta haqqi (Tolandi)','Zapchastlar (Tolandi)','Jami (barcha)']];
+  Object.keys(mMap).sort().forEach(function(k){
+    var mo=mMap[k];
+    var p=mo.filter(function(o){return o.status==='Tolandi'||o.status==='BekorTolandi';});
+    var parts=k.split('-');
+    rows.push([months[parseInt(parts[1])-1]+' '+parts[0], mo.length, p.length,
+      p.reduce(function(s,o){return s+(o.jami||0);},0),
+      p.reduce(function(s,o){return s+(o.xT||0);},0),
+      p.reduce(function(s,o){return s+(o.zT||0);},0),
+      mo.reduce(function(s,o){return s+(o.jami||0);},0)
     ]);
   });
-  // Jami qator
-  var totalJami = z1.reduce(function(s,o){return s+(o.jami||0);},0);
-  var totalX = z1.reduce(function(s,o){return s+(o.xT||0);},0);
-  var totalZ = z1.reduce(function(s,o){return s+(o.zT||0);},0);
-  rows.push(['','','','','','','JAMI:', totalX, totalZ, totalJami, '', '']);
-  var d = new Date();
-  csvDownload(rows, 'panda-zaявka1-'+d.getFullYear()+'-'+(d.getMonth()+1)+'.csv');
-  toast('✅ Zaявка 1 Excel yuklandi!');
+  var tp=filtered.filter(function(o){return o.status==='Tolandi'||o.status==='BekorTolandi';});
+  rows.push(['JAMI:',filtered.length,tp.length,
+    tp.reduce(function(s,o){return s+(o.jami||0);},0),
+    tp.reduce(function(s,o){return s+(o.xT||0);},0),
+    tp.reduce(function(s,o){return s+(o.zT||0);},0),
+    filtered.reduce(function(s,o){return s+(o.jami||0);},0)
+  ]);
+  csvDownload(rows,'panda-oylik-'+new Date().getFullYear()+'.csv');
+  toast('✅ Oylik hisobot yuklandi!');
 }
+function doJami(filtered, fv, tv) {
+  var rows=[['№','Sana','Zaявka ID','Ismi','Telefon','Mashina','Raqam','Usta haqqi','Zapchastlar','Jami','Status','Tolov']];
+  filtered.forEach(function(o,i){
+    rows.push([i+1, fmtDate(parseODate(o)), o.id,
+      o.ismi||'', o.tel||'', o.mashina||'', o.raqam||'',
+      o.xT||0, o.zT||0, o.jami||0, o.status, o.tolov||''
+    ]);
+  });
+  var tp=filtered.filter(function(o){return o.status==='Tolandi'||o.status==='BekorTolandi';});
+  rows.push(['','','','','','','JAMI:',
+    tp.reduce(function(s,o){return s+(o.xT||0);},0),
+    tp.reduce(function(s,o){return s+(o.zT||0);},0),
+    tp.reduce(function(s,o){return s+(o.jami||0);},0),'',''
+  ]);
+  csvDownload(rows,'panda-jami-'+fv+'_'+tv+'.csv');
+  toast('✅ Jami hisobot yuklandi!');
+}
+
+function exportExcel1() { openHisobotModal(); }
 
 function exportExcel2() {
   // Faqat Zaявka 2 (avtosalon/voucher)
