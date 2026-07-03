@@ -321,6 +321,15 @@ textarea{resize:vertical;min-height:68px;}
       <div class="fg"><label>Muammo</label><textarea id="f-muammo" placeholder="Mijoz nima deyapti..."></textarea></div>
       <div class="fg"><label>Usta</label><input id="f-usta" placeholder="Usta ismi..."></div>
     </div>
+    <div class="card" style="border:2px solid #80CBC4;">
+      <div class="ct" style="color:#00695C;">🎟️ Voucher (ixtiyoriy)</div>
+      <div class="fg"><label style="color:#00695C;">Voucher raqami</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="f-voucher" placeholder="Avtomatik beriladi..." style="flex:1;border-color:#80CBC4;font-family:monospace;" readonly>
+          <button type="button" onclick="toggleVoucher1()" id="voucher1-btn" style="padding:8px 14px;border-radius:10px;border:2px solid #80CBC4;background:var(--bg);color:#00695C;font-family:Nunito,sans-serif;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;">+ Voucher</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ZAЯВКА 2 -->
@@ -337,11 +346,14 @@ textarea{resize:vertical;min-height:68px;}
     </div>
     <div class="card" style="border:2px solid #CE93D8;">
       <div class="ct" style="color:#6A1B9A;">🏢 Avtosalon ma'lumoti</div>
-      <div class="fg"><label>Avtosalon nomi</label><input id="f2-salon" placeholder="Panda Motors..."></div>
+      <div class="fg"><label style="color:#6A1B9A;">Avtosalon nomi *</label><input id="f2-salon" placeholder="Panda Motors..." style="border-color:#CE93D8;"></div>
     </div>
     <div class="card" style="border:2px solid #80CBC4;">
       <div class="ct" style="color:#00695C;">🎟️ Voucher</div>
-      <div class="fg"><label>Voucher raqami</label><input id="f2-voucher" placeholder="V-2024-001..."></div>
+      <div class="fg">
+        <label style="color:#00695C;">Voucher raqami (avtomatik)</label>
+        <input id="f2-voucher" placeholder="Avtomatik beriladi..." style="border-color:#80CBC4;font-family:monospace;background:#f0fdf4;" readonly>
+      </div>
     </div>
   </div>
 
@@ -421,6 +433,10 @@ textarea{resize:vertical;min-height:68px;}
     </div>
     <div class="stgrd" id="stgrd"></div>
     <div class="card"><div class="ct">🔧 Eng kop xizmatlar</div><div id="xstats"></div></div>
+    <div class="card" id="voucher-hisobot-card" style="display:none;">
+      <div class="ct">🎟️ Voucher mijozlar</div>
+      <div id="voucher-stats-list"></div>
+    </div>
   </div>
 </div>
 
@@ -1412,6 +1428,42 @@ function saveEtiroz() {
   closeEtiroz();
 }
 
+function getNextVoucher() {
+  var year = new Date().getFullYear();
+  // Find max voucher number this year
+  var prefix = 'V-' + year + '-';
+  var maxNum = 0;
+  orders.forEach(function(o) {
+    if (o.voucher && o.voucher.indexOf(prefix) === 0) {
+      var num = parseInt(o.voucher.replace(prefix, '')) || 0;
+      if (num > maxNum) maxNum = num;
+    }
+  });
+  return prefix + String(maxNum + 1).padStart(3, '0');
+}
+
+var voucher1Active = false;
+function toggleVoucher1() {
+  voucher1Active = !voucher1Active;
+  var inp = document.getElementById('f-voucher');
+  var btn = document.getElementById('voucher1-btn');
+  if (voucher1Active) {
+    inp.value = getNextVoucher();
+    inp.style.background = '#f0fdf4';
+    btn.style.background = '#E8F5E9';
+    btn.style.borderColor = '#2E7D32';
+    btn.style.color = '#2E7D32';
+    btn.textContent = '✓ Bekor';
+  } else {
+    inp.value = '';
+    inp.style.background = '';
+    btn.style.background = 'var(--bg)';
+    btn.style.borderColor = '#80CBC4';
+    btn.style.color = '#00695C';
+    btn.textContent = '+ Voucher';
+  }
+}
+
 window.onload = function() {
   localStorage.removeItem('px'); xizmatlar = [];
   document.getElementById('hdr-logo').src = LOGO_SRC;
@@ -1620,6 +1672,9 @@ function switchZTab(n) {
   } else {
     t2.style.border='2px solid #FFB74D'; t2.style.background='#FFF3E0'; t2.style.color='#E65100';
     t1.style.border='2px solid var(--border)'; t1.style.background='var(--bg)'; t1.style.color='var(--muted)';
+    // Avtomatik voucher raqami berish
+    var vEl = document.getElementById('f2-voucher');
+    if (vEl && !vEl.value) vEl.value = getNextVoucher();
   }
   window._zTab = n;
 }
@@ -1643,9 +1698,12 @@ function submitO() {
     usta = document.getElementById('f2-usta') ? document.getElementById('f2-usta').value.trim() : '';
     salon = document.getElementById('f2-salon') ? document.getElementById('f2-salon').value.trim() : '';
     voucher = document.getElementById('f2-voucher') ? document.getElementById('f2-voucher').value.trim() : '';
+    if (!salon) { toast('Avtosalon nomi kiritilsin!'); return; }
+    if (!voucher) voucher = getNextVoucher();
   } else {
     ismi = v('f-ismi'); tel = v('f-tel'); mashina = v('f-mashina');
     raqam = v('f-raqam').toUpperCase(); muammo = v('f-muammo'); usta = v('f-usta');
+    voucher = document.getElementById('f-voucher') ? document.getElementById('f-voucher').value.trim() : '';
     if (!ismi || !tel || !mashina) { toast('Ismi, telefon va mashina toldirilsin!'); return; }
   }
 
@@ -1678,7 +1736,8 @@ function submitO() {
   btn.disabled = true; btn.innerHTML = '<span class="sp"></span> Saqlanmoqda...';
   setTimeout(function() {
     btn.disabled = false; btn.innerHTML = '✅ Zaявka saqlash';
-    ['f-ismi','f-tel','f-mashina','f-raqam','f-muammo','f2-vin','f2-ismi','f2-tel','f2-mashina','f2-raqam','f2-muammo','f2-salon','f2-voucher'].forEach(function(id){
+    voucher1Active = false; var vb = document.getElementById('voucher1-btn'); if(vb){vb.textContent='+ Voucher';vb.style.background='var(--bg)';vb.style.borderColor='#80CBC4';vb.style.color='#00695C';}
+    ['f-ismi','f-tel','f-mashina','f-raqam','f-muammo','f-voucher','f2-vin','f2-ismi','f2-tel','f2-mashina','f2-raqam','f2-muammo','f2-salon','f2-voucher'].forEach(function(id){
       var el = document.getElementById(id); if(el) el.value = '';
     });
     document.getElementById('f-st').value = 'Yangi';
