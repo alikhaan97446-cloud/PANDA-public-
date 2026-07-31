@@ -619,7 +619,7 @@ async function saveToSupabase(order) {
     diag: order.diag || '', x_total: order.xT || 0, jami: order.jami || 0,
     status: order.status, tolov: order.tolov || '',
     nak_type: order.nakType || 'full',
-    hist: order.hist || [], zapchastlar: order.zapchastlar || [], z_total: order.zT || 0, vin: order.vin || '', salon: order.salon || '', voucher: order.voucher || '', tip: order.tip || 'z1', crm_status: order.crmStatus || 'pending', crm_note: order.crmNote || '', ts: order.ts
+    hist: order.hist || [], zapchastlar: order.zapchastlar || [], z_total: order.zT || 0, vin: order.vin || '', salon: order.salon || '', voucher: order.voucher || '', tip: order.tip || 'z1', crm_status: order.crmStatus || 'pending', crm_note: order.crmNote || '', ts: order.ts, izoh: order.izoh || ''
   };
   try {
     // UPSERT: agar mavjud bo'lsa yangilaydi, bo'lmasa qo'shadi
@@ -661,7 +661,7 @@ async function updateInSupabase(order) {
     hist: order.hist || [], xizmatlar: order.xizmatlar || [],
     xstr: order.xStr || '', has_diag: order.hasDiag || false,
     diag_p: order.diagP || 0, x_total: order.xT || 0,
-    diag: order.diag || '', zapchastlar: order.zapchastlar || [], z_total: order.zT || 0, vin: order.vin || '', salon: order.salon || '', voucher: order.voucher || '', tip: order.tip || 'z1', crm_status: order.crmStatus || 'pending', crm_note: order.crmNote || '', ts: order.ts
+    diag: order.diag || '', zapchastlar: order.zapchastlar || [], z_total: order.zT || 0, vin: order.vin || '', salon: order.salon || '', voucher: order.voucher || '', tip: order.tip || 'z1', crm_status: order.crmStatus || 'pending', crm_note: order.crmNote || '', ts: order.ts, izoh: order.izoh || ''
   };
   try {
     var res = await fetch(SB_URL + '/rest/v1/zayavkalar?id=eq.' + encodeURIComponent(order.id), {
