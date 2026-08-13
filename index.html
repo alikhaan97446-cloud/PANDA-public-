@@ -1818,7 +1818,10 @@ function openDet(id) {
     var ustaRow = isRh ?
       ('<div style="margin-bottom:12px;">' +
         '<label style="display:block;font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;">Usta</label>' +
-        '<input id="det-usta" data-oid="'+id+'" value="'+(o.usta||'')+'" placeholder="Usta ismi..." oninput="saveUsta(this)" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:11px;font-family:Nunito,sans-serif;font-size:14px;font-weight:600;color:var(--text);background:var(--bg);">' +
+        '<div style="display:flex;gap:7px;">' +
+          '<input id="det-usta" data-oid="'+id+'" value="'+(o.usta||'')+'" placeholder="Usta ismi..." style="flex:1;padding:11px 14px;border:2px solid var(--border);border-radius:11px;font-family:Nunito,sans-serif;font-size:14px;font-weight:600;color:var(--text);background:var(--bg);">' +
+          '<button data-oid="'+id+'" onclick="saveUstaBtn(this)" style="padding:0 16px;background:linear-gradient(120deg,#007A2F,#00C853);color:#fff;border:none;border-radius:11px;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;">Saqlash</button>' +
+        '</div>' +
       '</div>') :
       (o.usta ? ('<div style="margin-bottom:12px;font-size:13px;"><span style="color:var(--muted);font-weight:800;">Usta: </span><span style="font-weight:700;">'+o.usta+'</span></div>') : '');
 
@@ -2131,6 +2134,19 @@ function saveUsta(el) {
   save();
   updateInSupabase(o);
   renderO();
+}
+
+function saveUstaBtn(btn) {
+  var id = btn.getAttribute('data-oid');
+  var o = orders.find(function(x){return String(x.id)===String(id);});
+  if (!o) return;
+  var input = document.getElementById('det-usta');
+  var val = input ? input.value.trim() : '';
+  o.usta = val;
+  save();
+  updateInSupabase(o);
+  renderO();
+  toast('✅ Usta saqlandi: ' + (val || '—'));
 }
 
 function nakOpen2(elId) {
