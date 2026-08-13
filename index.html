@@ -1814,6 +1814,14 @@ function openDet(id) {
     var diagRow = '';
     diagRow = '';
 
+    // Usta (faqat rahbar ozgartira oladi)
+    var ustaRow = isRh ?
+      ('<div style="margin-bottom:12px;">' +
+        '<label style="display:block;font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;">Usta</label>' +
+        '<input id="det-usta" data-oid="'+id+'" value="'+(o.usta||'')+'" placeholder="Usta ismi..." oninput="saveUsta(this)" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:11px;font-family:Nunito,sans-serif;font-size:14px;font-weight:600;color:var(--text);background:var(--bg);">' +
+      '</div>') :
+      (o.usta ? ('<div style="margin-bottom:12px;font-size:13px;"><span style="color:var(--muted);font-weight:800;">Usta: </span><span style="font-weight:700;">'+o.usta+'</span></div>') : '');
+
     // Xizmatlar grid
     var chips = xizmatlar.map(function(x, i) {
       var already = (o.xizmatlar||[]).some(function(ox){return ox.name===x.name;});
@@ -1889,6 +1897,7 @@ function openDet(id) {
     '</div>';
 
     xizmatBlok = '<div style="margin-top:14px;padding-top:12px;border-top:2px dashed var(--border);">' +
+      ustaRow +
       '<div style="font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Xizmatlar</div>' +
       diagRow +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px;">'+chips+'</div>' +
@@ -1899,8 +1908,8 @@ function openDet(id) {
       izohRow +
     '</div>';
 
-  } else if (currentRole === 'rahbar') {
-    // Rahbar - to'liq tahrirlash
+  } else if (false) {
+    // (eski, ishlatilmaydigan blok - qoldirildi, hech qachon ishga tushmaydi)
     var ustaRow = '<div style="margin-bottom:12px;">' +
       '<label style="display:block;font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;">Usta</label>' +
       '<input id="det-usta" data-oid="'+id+'" value="'+(o.usta||'')+'" placeholder="Usta ismi..." oninput="saveUsta(this)" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:11px;font-family:Nunito,sans-serif;font-size:14px;font-weight:600;color:var(--text);background:var(--bg);">' +
