@@ -504,6 +504,9 @@ textarea{resize:vertical;min-height:68px;}
       <input type="hidden" id="tov-type" value="Naqd">
       <input type="hidden" id="tov-mode" value="full">
       <div id="tov-info" style="display:none;background:#FCE4EC;color:#880E4F;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;margin-bottom:12px;"></div>
+      <label style="display:block;font-weight:800;margin:10px 0 6px;">To‘lov summasi (so‘m)</label>
+      <input id="tov-amount" type="number" min="1" step="1" inputmode="numeric" placeholder="Summani kiriting" style="width:100%;box-sizing:border-box;padding:13px;border:1px solid #ddd;border-radius:10px;font-size:18px;font-weight:800;margin-bottom:14px;">
+      <div id="tov-balance" style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:12px;"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div class="tc-chip on" onclick="pickTov(this,'Naqd')"><div style="font-size:28px;margin-bottom:4px;">💵</div><div style="font-size:14px;font-weight:800;">Naqd</div></div>
         <div class="tc-chip" onclick="pickTov(this,'Payme')"><div style="font-size:28px;margin-bottom:4px;">📱</div><div style="font-size:14px;font-weight:800;">Payme</div></div>
@@ -790,66 +793,63 @@ function setH(mode) {
   if (active) { active.style.background = 'var(--gd)'; active.style.color = '#fff'; }
   renderStats();
 }
+function paymentEvents(o) {
+  return (o.hist || []).filter(function(h){ return h && h.payment && Number(h.amount) > 0; }).map(function(h){
+    return {amount:Number(h.amount), type:h.type || 'Naqd', date:h.paidAt || h.t || '', role:h.rol || ''};
+  });
+}
+function paymentSum(o) {
+  return paymentEvents(o).reduce(function(sum,p){ return sum + p.amount; }, 0);
+}
+function paymentInPeriod(o, mode, now) {
+  return paymentEvents(o).filter(function(p){
+    var d = new Date(p.date);
+    if (isNaN(d.getTime())) return false;
+    if (mode === 'today') return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
+    if (mode === 'month') return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+    return true;
+  });
+}
 function renderStats() {
   var el = document.getElementById('hisobot-content');
   if (!el || el.style.display === 'none') return;
   var now = new Date();
   var filtered = orders.filter(function(o) {
-    if (hMode === 'today') {
-      var d = new Date(o.ts);
-      return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
-    }
-    if (hMode === 'month') {
-      var d2 = new Date(o.ts);
-      return d2.getFullYear()===now.getFullYear() && d2.getMonth()===now.getMonth();
-    }
+    if (hMode === 'today') { var d = new Date(o.ts); return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate(); }
+    if (hMode === 'month') { var d2 = new Date(o.ts); return d2.getFullYear()===now.getFullYear() && d2.getMonth()===now.getMonth(); }
     return true;
   });
 
-  var paid = filtered.filter(function(o){return o.status==='Tolandi'||o.status==='BekorTolandi';});
-  var total = paid.reduce(function(s,o){return s+(o.jami||0);},0);
+  // Kassa tushumi buyurtma sanasidan emas, haqiqiy to'lov sanasidan olinadi.
+  var periodPayments = [];
+  orders.forEach(function(o){ paymentInPeriod(o, hMode, now).forEach(function(p){ periodPayments.push(p); }); });
+  var total = periodPayments.reduce(function(sum,p){ return sum + p.amount; }, 0);
+  var paidOrders = orders.filter(function(o){ return paymentSum(o) >= Number(o.jami||0) && paymentSum(o)>0; });
 
   var sgrd = document.getElementById('sgrd');
   if (sgrd) sgrd.innerHTML =
     '<div class="scard"><div class="sval">'+filtered.length+'</div><div class="slbl">Jami zaявka</div></div>'+
-    '<div class="scard"><div class="sval">'+paid.length+'</div><div class="slbl">Tolangan</div></div>'+
-    '<div class="scard"><div class="sval">'+fmt(total)+'</div><div class="slbl">Daromad (som)</div></div>'+
+    '<div class="scard"><div class="sval">'+paidOrders.length+'</div><div class="slbl">To‘liq to‘langan</div></div>'+
+    '<div class="scard"><div class="sval">'+fmt(total)+'</div><div class="slbl">Kassaga tushum (som)</div></div>'+
     '<div class="scard"><div class="sval">'+orders.filter(function(o){return o.status==='Jarayonda';}).length+'</div><div class="slbl">Jarayonda</div></div>';
 
-  // Tolov turlari
   var tMap = {};
-  paid.forEach(function(o){var t=o.tolov||'Naqd';tMap[t]=(tMap[t]||0)+(o.jami||0);});
+  periodPayments.forEach(function(p){ tMap[p.type]=(tMap[p.type]||0)+p.amount; });
   var tEl = document.getElementById('tolov-stats');
-  if (tEl) tEl.innerHTML = Object.keys(tMap).map(function(k){
-    return '<div class="xstat"><span style="font-weight:700;">'+k+'</span><span class="xcnt">'+fmt(tMap[k])+' som</span></div>';
-  }).join('') || '<p style="color:var(--muted);font-size:13px;">Tolovlar yoq</p>';
+  if (tEl) tEl.innerHTML = Object.keys(tMap).map(function(k){ return '<div class="xstat"><span style="font-weight:700;">'+k+'</span><span class="xcnt">'+fmt(tMap[k])+' som</span></div>'; }).join('') || '<p style="color:var(--muted);font-size:13px;">Tanlangan davrda qayd etilgan to‘lov yo‘q</p>';
 
-  // Status grid
   var stgrd = document.getElementById('stgrd');
   if (stgrd) {
     var colors = {Yangi:'#E3F2FD:#1565C0',Diagnostika:'#F3E5F5:#6A1B9A',Kelishildi:'#FFF8E1:#E65100',Jarayonda:'#E8F5E9:#2E7D32',Yakun:'#E0F2F1:#00695C',Tolandi:'#E8F5E9:#1B5E20',Bekor:'#FFEBEE:#B71C1C',BekorTolandi:'#FCE4EC:#880E4F'};
-    stgrd.innerHTML = Object.keys(colors).map(function(k){
-      var c=colors[k].split(':');
-      var cnt=filtered.filter(function(o){return o.status===k;}).length;
-      return '<div class="stcard" style="background:'+c[0]+';border-color:'+c[1]+';"><div class="stval" style="color:'+c[1]+';">'+cnt+'</div><div class="stlbl" style="color:'+c[1]+';">'+k+'</div></div>';
-    }).join('');
+    stgrd.innerHTML = Object.keys(colors).map(function(k){ var c=colors[k].split(':'); var cnt=filtered.filter(function(o){return o.status===k;}).length; return '<div class="stcard" style="background:'+c[0]+';border-color:'+c[1]+';"><div class="stval" style="color:'+c[1]+';">'+cnt+'</div><div class="stlbl" style="color:'+c[1]+';">'+k+'</div></div>'; }).join('');
   }
-
-  // Xizmatlar statistika
   var xMap = {};
   filtered.forEach(function(o){(o.xizmatlar||[]).forEach(function(x){xMap[x.name]=(xMap[x.name]||0)+1;});});
   var sorted = Object.keys(xMap).sort(function(a,b){return xMap[b]-xMap[a];}).slice(0,8);
   var xEl = document.getElementById('xstats');
-  if (xEl) xEl.innerHTML = sorted.length ? sorted.map(function(k){
-    return '<div class="xstat"><span style="font-weight:700;font-size:13px;">'+k+'</span><span class="xcnt">'+xMap[k]+' ta</span></div>';
-  }).join('') : '<p style="color:var(--muted);font-size:13px;">Xizmatlar yoq</p>';
-
-  // Excel tugmasi
-  var exBtn = document.getElementById('excel-export-btn');
-  var exBtn2 = document.getElementById('excel-export-btn2');
-  var showEx = (currentRole==='rahbar');
-  if (exBtn) exBtn.style.display = showEx ? 'inline-block' : 'none';
-  if (exBtn2) exBtn2.style.display = showEx ? 'inline-block' : 'none';
+  if (xEl) xEl.innerHTML = sorted.length ? sorted.map(function(k){return '<div class="xstat"><span style="font-weight:700;font-size:13px;">'+k+'</span><span class="xcnt">'+xMap[k]+' ta</span></div>';}).join('') : '<p style="color:var(--muted);font-size:13px;">Xizmatlar yoq</p>';
+  var exBtn = document.getElementById('excel-export-btn'); var exBtn2 = document.getElementById('excel-export-btn2'); var showEx = (currentRole==='rahbar');
+  if (exBtn) exBtn.style.display = showEx ? 'inline-block' : 'none'; if (exBtn2) exBtn2.style.display = showEx ? 'inline-block' : 'none';
 }
 
 function csvDownload(rows, filename) {
@@ -2130,35 +2130,42 @@ function openTov(id, mode) {
   if (!o) return;
   document.getElementById('tov-id').value = id;
   document.getElementById('tov-mode').value = mode||'full';
-  document.getElementById('tov-title').textContent = mode==='diag'?'Diagnostika tolovi':'Tolov usuli';
+  document.getElementById('tov-title').textContent = mode==='diag'?'Diagnostika tolovi':'To‘lov summasi';
   var info=document.getElementById('tov-info');
-  if(mode==='diag'){info.style.display='block';info.textContent='Diagnostika: '+fmt(o.diagP||diagP)+' som';}
+  var due = mode==='diag' ? Number(o.diagP||diagP) : Math.max(0, Number(o.jami||0)-paymentSum(o));
+  if(mode==='diag'){info.style.display='block';info.textContent='Diagnostika: '+fmt(due)+' som';}
   else{info.style.display='none';}
+  document.getElementById('tov-amount').value = due || '';
+  document.getElementById('tov-balance').textContent = mode==='diag' ? '' : 'Qolgan qarz: '+fmt(due)+' so‘m';
   document.querySelectorAll('.tc-chip').forEach(function(c,i){c.classList.remove('on');if(i===0)c.classList.add('on');});
   document.getElementById('tov-ov').classList.add('on');
 }
-
 function closeTov() { document.getElementById('tov-ov').classList.remove('on'); }
-function pickTov(el,type){
-  document.querySelectorAll('.tc-chip').forEach(function(c){c.classList.remove('on');});
-  el.classList.add('on');
-}
-
+function pickTov(el,type){ document.querySelectorAll('.tc-chip').forEach(function(c){c.classList.remove('on');}); el.classList.add('on'); }
 function confirmTov(){
   var id=document.getElementById('tov-id').value;
   var mode=document.getElementById('tov-mode').value;
   var o=orders.find(function(x){return String(x.id)===String(id);});
   if(!o)return;
+  var amount=Number(document.getElementById('tov-amount').value);
   var chip=document.querySelector('.tc-chip.on div:last-child');
-  var type=chip?chip.textContent:'Naqd';
-  o.tolov=type;
-  if(mode==='diag'){o.status='BekorTolandi';o.nakType='diag';o.jami=o.diagP||diagP;}
-  else{o.status='Tolandi';o.nakType='full';}
+  var type=chip?chip.textContent.trim():'Naqd';
+  var target=mode==='diag' ? Number(o.diagP||diagP) : Number(o.jami||0);
+  var already=mode==='diag' ? 0 : paymentSum(o);
+  var remaining=Math.max(0,target-already);
+  if(!Number.isFinite(amount)||amount<=0){toast('To‘lov summasini kiriting!');return;}
+  if(amount>remaining){toast('To‘lov qolgan qarzdan oshmasligi kerak: '+fmt(remaining)+' so‘m');return;}
   if(!o.hist)o.hist=[];
-  o.hist.push({s:o.status+' - '+type,t:new Date().toLocaleString('uz-UZ'),rol:currentRole});
+  var now=new Date();
+  o.hist.push({s:'To‘lov qabul qilindi - '+type,t:now.toLocaleString('uz-UZ'),paidAt:now.toISOString(),rol:currentRole,payment:true,amount:amount,type:type});
+  o.tolov=type;
+  if(mode==='diag'){o.nakType='diag';o.jami=target;o.status='BekorTolandi';}
+  else if(already+amount>=target){o.status='Tolandi';o.nakType='full';}
+  // Qisman to'lovda buyurtmaning ish statusi o'zgarmaydi.
   save();closeTov();closeDet();renderO();renderStats();
-  toast('Tolandi: '+type);
-  setTimeout(function(){openNak(o);},400);
+  var left=Math.max(0,target-(already+amount));
+  toast(left>0 ? 'Qisman to‘lov saqlandi. Qoldiq: '+fmt(left)+' so‘m' : 'To‘liq to‘lov saqlandi: '+fmt(amount)+' so‘m');
+  if(left===0 && mode!=='diag') setTimeout(function(){openNak(o);},400);
   updateInSupabase(o);
 }
 
