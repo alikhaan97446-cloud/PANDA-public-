@@ -319,7 +319,6 @@ textarea{resize:vertical;min-height:68px;}
       <div class="fg"><label>Model *</label><input id="f-mashina" placeholder="BYD Atto 3..."></div>
       <div class="fg"><label>Davlat raqami</label><input id="f-raqam" placeholder="01 A 123 BC"></div>
       <div class="fg"><label>Muammo</label><textarea id="f-muammo" placeholder="Mijoz nima deyapti..."></textarea></div>
-      <div class="fg"><label>Usta</label><input id="f-usta" placeholder="Usta ismi..."></div>
     </div>
     <div class="card" style="border:2px solid #80CBC4;">
       <div class="ct" style="color:#00695C;">🎟️ Voucher (ixtiyoriy)</div>
@@ -342,7 +341,6 @@ textarea{resize:vertical;min-height:68px;}
       <div class="fg"><label>Mashina modeli (ixtiyoriy)</label><input id="f2-mashina" placeholder="BYD Atto 3..."></div>
       <div class="fg"><label>Davlat raqami (ixtiyoriy)</label><input id="f2-raqam" placeholder="01 A 123 BC"></div>
       <div class="fg"><label>Muammo</label><textarea id="f2-muammo" placeholder="Mijoz nima deyapti..."></textarea></div>
-      <div class="fg"><label>Usta</label><input id="f2-usta" placeholder="Usta ismi..."></div>
     </div>
     <div class="card" style="border:2px solid #CE93D8;">
       <div class="ct" style="color:#6A1B9A;">🏢 Avtosalon ma'lumoti</div>
@@ -1117,7 +1115,6 @@ function openNak(o) {
   var tl = o.tolov?'<p style="text-align:right;padding:1mm 5mm;font-size:9pt;color:#666;margin:0">Tolov: '+o.tolov+'</p>':'';
   var mh = o.muammo?'<div style="padding:2mm 3mm"><span style="background:#FFB800;color:#1a1a1a;font-size:8pt;font-weight:800;padding:1mm 2.5mm;border-radius:20px">'+o.muammo+'</span></div>':'';
   var rh = o.raqam?'<div style="padding:2mm 3mm;border-bottom:1px solid #f5f5f5"><p style="font-size:7pt;color:#999;margin:0">Raqam</p><p style="font-size:9pt;font-weight:800;margin:0">'+o.raqam+'</p></div>':'';
-  var un = o.usta?'<p style="font-size:9pt;font-weight:800;margin:0 0 3mm 0">'+o.usta+'</p>':'<p style="margin:0 0 5mm 0">&nbsp;</p>';
   var html = ''
     +'<div style="display:flex;overflow:hidden">'
       +'<div style="background:#1a1a1a;width:44mm;display:flex;align-items:center;justify-content:center;padding:5mm;flex-shrink:0;clip-path:polygon(0 0,100% 0,85% 100%,0 100%)">'
@@ -1170,12 +1167,6 @@ function openNak(o) {
     +'</div>'
     +tl
     +'<div style="padding:3mm 5mm 2mm;display:flex;align-items:flex-end;gap:4mm;border-top:1px dashed #ddd;margin:0 5mm">'
-      +'<div style="flex:1">'
-        +'<p style="font-size:8pt;font-weight:900;text-transform:uppercase;margin:0 0 1mm 0">Usta imzosi</p>'
-        +un
-        +'<div style="border-top:1.5px solid #ccc"></div>'
-        +'<p style="font-size:7pt;color:#bbb;text-align:center;margin:1mm 0 0 0">(imzo)</p>'
-      +'</div>'
       +'<div style="flex:1">'
         +'<p style="font-size:8pt;font-weight:900;text-transform:uppercase;margin:0 0 1mm 0">Mijoz imzosi</p>'
         +'<p style="font-size:9pt;font-weight:800;color:#1a1a1a;margin:0 0 3mm 0">'+o.ismi+'</p>'
@@ -1745,7 +1736,7 @@ function submitO() {
   var status = v('f-st');
   var isOp = currentRole === 'operator' || currentRole === 'rahbar';
   var isZ2 = window._zTab === 2;
-  var ismi, tel, mashina, raqam, muammo, usta, vin='', salon='', voucher='';
+  var ismi, tel, mashina, raqam, muammo, vin='', salon='', voucher='';
 
   if (isZ2) {
     // Zaявka 2 - VIN majburiy
@@ -1756,14 +1747,13 @@ function submitO() {
     mashina = document.getElementById('f2-mashina') ? document.getElementById('f2-mashina').value.trim() : '';
     raqam = document.getElementById('f2-raqam') ? document.getElementById('f2-raqam').value.trim().toUpperCase() : '';
     muammo = document.getElementById('f2-muammo') ? document.getElementById('f2-muammo').value.trim() : '';
-    usta = document.getElementById('f2-usta') ? document.getElementById('f2-usta').value.trim() : '';
     salon = document.getElementById('f2-salon') ? document.getElementById('f2-salon').value.trim() : '';
     voucher = document.getElementById('f2-voucher') ? document.getElementById('f2-voucher').value.trim() : '';
     if (!salon) { toast('Avtosalon nomi kiritilsin!'); return; }
     if (!voucher) voucher = getNextVoucher();
   } else {
     ismi = v('f-ismi'); tel = v('f-tel'); mashina = v('f-mashina');
-    raqam = v('f-raqam').toUpperCase(); muammo = v('f-muammo'); usta = v('f-usta');
+    raqam = v('f-raqam').toUpperCase(); muammo = v('f-muammo');
     voucher = document.getElementById('f-voucher') ? document.getElementById('f-voucher').value.trim() : '';
     if (!ismi || !tel || !mashina) { toast('Ismi, telefon va mashina toldirilsin!'); return; }
   }
@@ -1784,7 +1774,6 @@ function submitO() {
     vin: vin, salon: salon, voucher: voucher,
     xizmatlar: allX, xStr: allX.map(function(x){return x.name;}).join(', '),
     zapchastlar: allZ, zT: zT, aktivatsiyalar: allA, aT: aT,
-    usta: usta||'',
     hasDiag: hasDiag, diagP: hasDiag ? diagP : 0,
     xT: xT, jami: xT + zT + aT + (hasDiag ? diagP : 0),
     status: status, tolov: '', nakType: 'full',
@@ -1878,16 +1867,7 @@ function openDet(id) {
     var diagRow = '';
     diagRow = '';
 
-    // Usta (faqat rahbar ozgartira oladi)
-    var ustaRow = isRh ?
-      ('<div style="margin-bottom:12px;">' +
-        '<label style="display:block;font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;">Usta</label>' +
-        '<div style="display:flex;gap:7px;">' +
-          '<input id="det-usta" data-oid="'+id+'" value="'+(o.usta||'')+'" placeholder="Usta ismi..." style="flex:1;padding:11px 14px;border:2px solid var(--border);border-radius:11px;font-family:Nunito,sans-serif;font-size:14px;font-weight:600;color:var(--text);background:var(--bg);">' +
-          '<button data-oid="'+id+'" onclick="saveUstaBtn(this)" style="padding:0 16px;background:linear-gradient(120deg,#007A2F,#00C853);color:#fff;border:none;border-radius:11px;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;">Saqlash</button>' +
-        '</div>' +
-      '</div>') :
-      (o.usta ? ('<div style="margin-bottom:12px;font-size:13px;"><span style="color:var(--muted);font-weight:800;">Usta: </span><span style="font-weight:700;">'+o.usta+'</span></div>') : '');
+    // Har bir xizmat uchun alohida usta maydoni quyida ko‘rsatiladi.
 
     // Xizmatlar grid
     var chips = xizmatlar.map(function(x, i) {
@@ -2107,6 +2087,16 @@ function confirmDel(id) {
 function changeSt(id, newSt) {
   var o = orders.find(function(x){return String(x.id)===String(id);});
   if (!o) { toast('Topilmadi!'); return; }
+  if (['Yakun','Tolandi','BekorTolandi'].indexOf(newSt) > -1) {
+    var missingUsta = (o.xizmatlar||[]).map(function(x,i){return {x:x,i:i};})
+      .filter(function(item){return !String(item.x.usta||'').trim();});
+    if (missingUsta.length) {
+      toast('Buyurtmani yakunlash uchun har bir xizmatga usta biriktiring: ' +
+        missingUsta.map(function(item){return item.x.name;}).join(', '), 4500);
+      openDet(String(o.id));
+      return;
+    }
+  }
   if (newSt === 'Tolandi') { openTov(id, 'full'); return; }
   if (newSt === 'BekorTolandi') { openTov(id, 'diag'); return; }
   o.status = newSt;
