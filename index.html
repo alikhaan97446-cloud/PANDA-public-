@@ -381,6 +381,12 @@ textarea{resize:vertical;min-height:68px;}
     <div class="ct" style="margin-bottom:8px;">✏️ Qoshimcha</div>
     <div id="clist"></div>
     <button class="btn-s" onclick="addC()" style="width:100%;margin-top:6px;">+ Xizmat qoshish</button>
+    <!-- AKTIVATSIYA: xizmat va zapchastlardan alohida hisob -->
+    <div style="margin-top:14px;padding-top:12px;border-top:2px dashed #D7CCFF;">
+      <div style="font-size:11px;font-weight:900;color:#6A1B9A;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">💻 Aktivatsiya</div>
+      <div id="alist"></div>
+      <button class="btn-s" onclick="addA()" style="width:100%;margin-top:6px;border-color:#B39DDB;color:#6A1B9A;background:#F3E5F5;">+ Aktivatsiya qo‘shish</button>
+    </div>
     <!-- ZAPCHASTLAR -->
     <div style="margin-top:14px;padding-top:12px;border-top:2px dashed #FFE0B2;">
       <div style="font-size:11px;font-weight:900;color:#E65100;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">⚙️ Zapchastlar</div>
@@ -573,7 +579,7 @@ async function loadFromSupabase() {
         return {
           id: r.id, sana: r.sana, ismi: r.ismi, tel: r.tel,
           mashina: r.mashina, raqam: r.raqam || '', muammo: r.muammo || '',
-          xizmatlar: r.xizmatlar || [], xStr: r.xstr || '',
+          xizmatlar: r.xizmatlar || [], aktivatsiyalar: r.aktivatsiyalar || [], xStr: r.xstr || '',
           usta: r.usta||'',
           izoh: r.izoh||'',
           hasDiag: r.has_diag, diagP: r.diag_p, diag: r.diag || '',
@@ -613,7 +619,7 @@ async function saveToSupabase(order) {
   var row = {
     id: order.id, sana: order.sana, ismi: order.ismi, tel: order.tel,
     mashina: order.mashina, raqam: order.raqam || '', muammo: order.muammo || '',
-    xizmatlar: order.xizmatlar || [], xstr: order.xStr || '',
+    xizmatlar: order.xizmatlar || [], aktivatsiyalar: order.aktivatsiyalar || [], xstr: order.xStr || '',
     usta: order.usta||'',
     has_diag: order.hasDiag || false, diag_p: order.diagP || 0,
     diag: order.diag || '', x_total: order.xT || 0, jami: order.jami || 0,
@@ -652,13 +658,23 @@ async function saveToSupabase(order) {
   }
 }
 
-async function updateInSupabase(order) {
+var _sbUpdateQueues = {};
+function updateInSupabase(order) {
+  var orderId = String(order.id);
+  // Snapshot the complete current order state for this save.
+  var snapshot = JSON.parse(JSON.stringify(order));
+  _sbUpdateQueues[orderId] = (_sbUpdateQueues[orderId] || Promise.resolve())
+    .catch(function(){})
+    .then(function(){ return _updateInSupabaseNow(snapshot); });
+  return _sbUpdateQueues[orderId];
+}
+async function _updateInSupabaseNow(order) {
   var row = {
     sana: order.sana, ismi: order.ismi, tel: order.tel,
     mashina: order.mashina, raqam: order.raqam || '', muammo: order.muammo || '',
     status: order.status, tolov: order.tolov || '',
     nak_type: order.nakType || 'full', jami: order.jami || 0,
-    hist: order.hist || [], xizmatlar: order.xizmatlar || [],
+    hist: order.hist || [], xizmatlar: order.xizmatlar || [], aktivatsiyalar: order.aktivatsiyalar || [],
     xstr: order.xStr || '', has_diag: order.hasDiag || false,
     diag_p: order.diagP || 0, x_total: order.xT || 0,
     diag: order.diag || '', zapchastlar: order.zapchastlar || [], z_total: order.zT || 0, vin: order.vin || '', salon: order.salon || '', voucher: order.voucher || '', tip: order.tip || 'z1', crm_status: order.crmStatus || 'pending', crm_note: order.crmNote || '', ts: order.ts, izoh: order.izoh || ''
@@ -725,7 +741,7 @@ var xizmatlar = [];
 var diagP = +(localStorage.getItem('pd') || 200000);
 var CODES = JSON.parse(localStorage.getItem('panda_codes') || '{"ad":"1111","op":"0000","rh":"0000"}');
 
-var selX = [], custX = [], custZ = [], curSt = 'Yangi', hMode = 'month';
+var selX = [], custX = [], custZ = [], custA = [], curSt = 'Yangi', hMode = 'month';
 var _zTab = 1;
 var currentRole = 'admin';
 var lockInput = '';
@@ -755,7 +771,9 @@ function recalcO(o) {
   var zT = (o.zapchastlar||[]).reduce(function(s,z){return s+(z.price||0);},0);
   o.xT = xT;
   o.zT = zT;
-  o.jami = xT + zT + (o.hasDiag ? (o.diagP||diagP) : 0);
+  var aT = (o.aktivatsiyalar||[]).reduce(function(s,a){return s+(a.price||0);},0);
+  o.aT = aT;
+  o.jami = xT + zT + aT + (o.hasDiag ? (o.diagP||diagP) : 0);
   o.xStr = (o.xizmatlar||[]).map(function(x){return x.name;}).join(', ');
 }
 function updateDiagShow() {
@@ -910,7 +928,7 @@ function doKunlik(filtered, fv, tv) {
     if(!dayMap[k]) dayMap[k]=[];
     dayMap[k].push(o);
   });
-  var rows=[['Sana','Buyurtmalar soni',"To'langan buyurtmalar",'Jami summa (Tolandi)','Usta haqqi (Tolandi)','Zapchastlar (Tolandi)','Jami summa (barcha status)']];
+  var rows=[['Sana','Buyurtmalar soni',"To'langan buyurtmalar",'Jami summa (Tolandi)','Usta haqqi (Tolandi)','Zapchastlar (Tolandi)','Aktivatsiya (Tolandi)','Jami summa (barcha status)']];
   var cur=new Date(fv), end=new Date(tv);
   while(cur<=end) {
     var k=cur.toISOString().slice(0,10);
@@ -920,6 +938,7 @@ function doKunlik(filtered, fv, tv) {
       paid.reduce(function(s,o){return s+(o.jami||0);},0),
       paid.reduce(function(s,o){return s+(o.xT||0);},0),
       paid.reduce(function(s,o){return s+(o.zT||0);},0),
+      paid.reduce(function(s,o){return s+((o.aktivatsiyalar||[]).reduce(function(a,x){return a+(x.price||0);},0));},0),
       day.reduce(function(s,o){return s+(o.jami||0);},0)
     ]);
     cur.setDate(cur.getDate()+1);
@@ -929,6 +948,7 @@ function doKunlik(filtered, fv, tv) {
     tp.reduce(function(s,o){return s+(o.jami||0);},0),
     tp.reduce(function(s,o){return s+(o.xT||0);},0),
     tp.reduce(function(s,o){return s+(o.zT||0);},0),
+    tp.reduce(function(s,o){return s+((o.aktivatsiyalar||[]).reduce(function(a,x){return a+(x.price||0);},0));},0),
     filtered.reduce(function(s,o){return s+(o.jami||0);},0)
   ]);
   csvDownload(rows,'panda-kunlik-'+fv+'_'+tv+'.csv');
@@ -943,7 +963,7 @@ function doOylik(filtered) {
     mMap[k].push(o);
   });
   var months=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
-  var rows=[['Oy','Buyurtmalar soni',"To'langan",'Jami (Tolandi)','Usta haqqi (Tolandi)','Zapchastlar (Tolandi)','Jami (barcha)']];
+  var rows=[['Oy','Buyurtmalar soni',"To'langan",'Jami (Tolandi)','Usta haqqi (Tolandi)','Zapchastlar (Tolandi)','Aktivatsiya (Tolandi)','Jami (barcha)']];
   Object.keys(mMap).sort().forEach(function(k){
     var mo=mMap[k];
     var p=mo.filter(function(o){return o.status==='Tolandi'||o.status==='BekorTolandi';});
@@ -952,6 +972,7 @@ function doOylik(filtered) {
       p.reduce(function(s,o){return s+(o.jami||0);},0),
       p.reduce(function(s,o){return s+(o.xT||0);},0),
       p.reduce(function(s,o){return s+(o.zT||0);},0),
+      p.reduce(function(s,o){return s+((o.aktivatsiyalar||[]).reduce(function(a,x){return a+(x.price||0);},0));},0),
       mo.reduce(function(s,o){return s+(o.jami||0);},0)
     ]);
   });
@@ -960,23 +981,25 @@ function doOylik(filtered) {
     tp.reduce(function(s,o){return s+(o.jami||0);},0),
     tp.reduce(function(s,o){return s+(o.xT||0);},0),
     tp.reduce(function(s,o){return s+(o.zT||0);},0),
+    tp.reduce(function(s,o){return s+((o.aktivatsiyalar||[]).reduce(function(a,x){return a+(x.price||0);},0));},0),
     filtered.reduce(function(s,o){return s+(o.jami||0);},0)
   ]);
   csvDownload(rows,'panda-oylik-'+new Date().getFullYear()+'.csv');
   toast('✅ Oylik hisobot yuklandi!');
 }
 function doJami(filtered, fv, tv) {
-  var rows=[['№','Sana','Zaявka ID','Ismi','Telefon','Mashina','Raqam','Usta haqqi','Zapchastlar','Jami','Status','Tolov']];
+  var rows=[['№','Sana','Zaявka ID','Ismi','Telefon','Mashina','Raqam','Usta haqqi','Zapchastlar','Aktivatsiya','Jami','Status','Tolov']];
   filtered.forEach(function(o,i){
     rows.push([i+1, fmtDate(parseODate(o)), o.id,
       o.ismi||'', o.tel||'', o.mashina||'', o.raqam||'',
-      o.xT||0, o.zT||0, o.jami||0, o.status, o.tolov||''
+      o.xT||0, o.zT||0, (o.aktivatsiyalar||[]).reduce(function(a,x){return a+(x.price||0);},0), o.jami||0, o.status, o.tolov||''
     ]);
   });
   var tp=filtered.filter(function(o){return o.status==='Tolandi'||o.status==='BekorTolandi';});
   rows.push(['','','','','','','JAMI:',
     tp.reduce(function(s,o){return s+(o.xT||0);},0),
     tp.reduce(function(s,o){return s+(o.zT||0);},0),
+    tp.reduce(function(s,o){return s+((o.aktivatsiyalar||[]).reduce(function(a,x){return a+(x.price||0);},0));},0),
     tp.reduce(function(s,o){return s+(o.jami||0);},0),'',''
   ]);
   csvDownload(rows,'panda-jami-'+fv+'_'+tv+'.csv');
@@ -989,7 +1012,7 @@ function exportExcel2() {
   // Faqat Zaявka 2 (avtosalon/voucher)
   var z2 = orders.filter(function(o){ return o.tip === 'z2'; });
   if (!z2.length) { toast('Zaявка 2 yoq!'); return; }
-  var rows = [['№','Sana','Zaявka ID','VIN Code','Ismi','Mashina','Usta haqqi','Zapchastlar','Jami','Status','Tolov','Avtosalon','Voucher']];
+  var rows = [['№','Sana','Zaявka ID','VIN Code','Ismi','Mashina','Usta haqqi','Zapchastlar','Aktivatsiya','Jami','Status','Tolov','Avtosalon','Voucher']];
   z2.forEach(function(o, i){
     var xT = (o.xizmatlar||[]).reduce(function(s,x){return s+(x.price||0);},0);
     var zT = (o.zapchastlar||[]).reduce(function(s,z){return s+(z.price||0);},0);
@@ -1073,14 +1096,21 @@ function openNak(o) {
       +'<td style="padding:2mm 3mm;font-size:9pt;font-weight:700;border-bottom:1px solid #f0f0f0">🔧 '+x.name+'</td>'
       +'<td style="padding:2mm 3mm;font-size:9pt;text-align:right;font-family:monospace;border-bottom:1px solid #f0f0f0">'+fmt(x.price)+' som</td></tr>';
   }).join('');
+  // Aktivatsiya rows - xizmat va zapchastdan alohida
+  var aArr = isDiag?[]:(o.aktivatsiyalar||[]);
+  rows += aArr.map(function(a,i){
+    return '<tr style="background:#F3E5F5"><td style="padding:2mm 3mm;text-align:center;color:#6A1B9A;border-bottom:1px solid #D7CCFF">'+(xArr.length+i+1)+'</td>'
+      +'<td style="padding:2mm 3mm;font-size:9pt;font-weight:700;color:#6A1B9A;border-bottom:1px solid #D7CCFF">💻 '+a.name+'<br><small>To‘langan: '+fmt(a.paid||0)+' som</small></td>'
+      +'<td style="padding:2mm 3mm;font-size:9pt;text-align:right;font-family:monospace;color:#6A1B9A;border-bottom:1px solid #D7CCFF">'+fmt(a.price)+' som</td></tr>';
+  }).join('');
   // Zapchastlar rows
   rows += zArr.map(function(z,i){
-    return '<tr style="background:#FFF3E0"><td style="padding:2mm 3mm;text-align:center;color:#E65100;border-bottom:1px solid #FFE0B2">'+(xArr.length+i+1)+'</td>'
+    return '<tr style="background:#FFF3E0"><td style="padding:2mm 3mm;text-align:center;color:#E65100;border-bottom:1px solid #FFE0B2">'+(xArr.length+aArr.length+i+1)+'</td>'
       +'<td style="padding:2mm 3mm;font-size:9pt;font-weight:700;color:#E65100;border-bottom:1px solid #FFE0B2">⚙️ '+z.name+'</td>'
       +'<td style="padding:2mm 3mm;font-size:9pt;text-align:right;font-family:monospace;color:#E65100;border-bottom:1px solid #FFE0B2">'+fmt(z.price)+' som</td></tr>';
   }).join('');
   if(o.hasDiag||isDiag){
-    rows+='<tr style="background:#F3E5F5"><td style="padding:2mm 3mm;text-align:center;color:#6A1B9A">'+(xArr.length+zArr.length+1)+'</td>'
+    rows+='<tr style="background:#F3E5F5"><td style="padding:2mm 3mm;text-align:center;color:#6A1B9A">'+(xArr.length+aArr.length+zArr.length+1)+'</td>'
       +'<td style="padding:2mm 3mm;font-size:9pt;font-weight:700;color:#6A1B9A">🔍 Diagnostika</td>'
       +'<td style="padding:2mm 3mm;font-size:9pt;text-align:right;font-family:monospace;color:#6A1B9A">'+fmt(o.diagP)+' som</td></tr>';
   }
@@ -1258,6 +1288,21 @@ function addZapchast(btn) {
   toast('⚙️ Zapchast qoshildi!');
   openDet(id);
 }
+function saveServiceUsta(id,xi,value) {
+  var o=orders.find(function(x){return String(x.id)===String(id);}); if(!o||!o.xizmatlar||!o.xizmatlar[xi])return;
+  o.xizmatlar[xi].usta=(value||'').trim(); save(); updateInSupabase(o);
+}
+function addActivationDetail(btn) {
+  var id=btn.dataset.oid, o=orders.find(function(x){return String(x.id)===String(id);}); if(!o)return;
+  var name=(document.getElementById('det-an').value||'').trim(), price=+(document.getElementById('det-ap').value)||0;
+  if(!name){toast('Aktivatsiya nomini kiriting!');return;}
+  if(price<=0){toast('Aktivatsiya narxini kiriting!');return;}
+  if(!o.aktivatsiyalar)o.aktivatsiyalar=[];
+  o.aktivatsiyalar.push({name:name,price:price});
+  recalcO(o); save(); updateInSupabase(o); openDet(id);
+}
+function removeA(btn) { var id=btn.dataset.oid, ai=+btn.dataset.ai, o=orders.find(function(x){return String(x.id)===String(id);}); if(!o||!o.aktivatsiyalar)return; o.aktivatsiyalar.splice(ai,1); recalcO(o); save(); updateInSupabase(o); openDet(id); }
+
 function removeZ(btn) {
   var id = btn.dataset.oid;
   var zi = +btn.dataset.zi;
@@ -1635,12 +1680,29 @@ function renderC() {
 function calcT() {
   var xT = selX.reduce(function(s,i){return s+xizmatlar[i].price;},0) + custX.reduce(function(s,x){return s+(x.price||0);},0);
   var zT = custZ.reduce(function(s,z){return s+(z.price||0);},0);
-  var t = xT + zT;
+  var aT = custA.reduce(function(s,a){return s+(a.price||0);},0);
+  var t = xT + zT + aT;
   var c = selX.length + custX.filter(function(x){return x.name;}).length;
+  var ac = custA.filter(function(a){return a.name;}).length;
   var tvEl = document.getElementById('tv');
   var xcEl = document.getElementById('xcnt');
   if (tvEl) tvEl.textContent = fmt(t) + ' som';
-  if (xcEl) xcEl.textContent = c + ' ta xizmat' + (custZ.length ? ', ' + custZ.length + ' zapchast' : '');
+  if (xcEl) xcEl.textContent = c + ' ta xizmat' + (custZ.length ? ', ' + custZ.length + ' zapchast' : '') + (ac ? ', ' + ac + ' aktivatsiya' : '');
+}
+
+function addA() {
+  custA.push({name:'',price:0,paid:0});
+  renderA();
+}
+function renderA() {
+  var el=document.getElementById('alist'); if(!el)return;
+  el.innerHTML=custA.map(function(a,i){
+    return '<div class="crow" style="border-color:#D7CCFF;flex-wrap:wrap;">'+
+      '<input placeholder="Aktivatsiya nomi" value="'+(a.name||'')+'" oninput="custA['+i+'].name=this.value;calcT()" style="flex:1;min-width:130px;">'+
+      '<input type="number" placeholder="Umumiy narx" value="'+(a.price||'')+'" oninput="custA['+i+'].price=+this.value||0;calcT()" class="pi">'+
+      '<input type="number" placeholder="To‘langan (ixtiyoriy)" value="'+(a.paid||'')+'" oninput="custA['+i+'].paid=+this.value||0;calcT()" class="pi">'+
+      '<button class="rmv" onclick="custA.splice('+i+',1);renderA()">×</button></div>';
+  }).join(''); calcT();
 }
 
 function addZ() {
@@ -1707,11 +1769,13 @@ function submitO() {
     if (!ismi || !tel || !mashina) { toast('Ismi, telefon va mashina toldirilsin!'); return; }
   }
 
-  var allX = isOp ? selX.map(function(i){return {name:xizmatlar[i].name,price:xizmatlar[i].price};}).concat(custX.filter(function(x){return x.name;}).map(function(x){return {name:x.name,price:x.price||0};})) : [];
+  var allX = isOp ? selX.map(function(i){return {name:xizmatlar[i].name,price:xizmatlar[i].price,usta:''};}).concat(custX.filter(function(x){return x.name;}).map(function(x){return {name:x.name,price:x.price||0,usta:x.usta||''};})) : [];
   var allZ = custZ.filter(function(z){return z.name;}).map(function(z){return {name:z.name,price:z.price||0};});
+  var allA = custA.filter(function(a){return a.name;}).map(function(a){return {name:a.name,price:a.price||0,paid:a.paid||0};});
 
   var xT = allX.reduce(function(s,x){return s+x.price;},0);
   var zT = allZ.reduce(function(s,z){return s+z.price;},0);
+  var aT = allA.reduce(function(s,a){return s+a.price;},0);
   var hasDiag = ['Diagnostika','Kelishildi','Jarayonda','Yakun','Tolandi','BekorTolandi'].indexOf(status) > -1;
   var order = {
     id: (isZ2 ? 'VIN-' : 'EV-') + String(getNextId()).padStart(4,'0'),
@@ -1720,16 +1784,17 @@ function submitO() {
     ismi: ismi||'', tel: tel||'', mashina: mashina||'', raqam: raqam||'', muammo: muammo||'',
     vin: vin, salon: salon, voucher: voucher,
     xizmatlar: allX, xStr: allX.map(function(x){return x.name;}).join(', '),
-    zapchastlar: allZ, zT: zT,
+    zapchastlar: allZ, zT: zT, aktivatsiyalar: allA, aT: aT,
     usta: usta||'',
     hasDiag: hasDiag, diagP: hasDiag ? diagP : 0,
-    xT: xT, jami: xT + zT + (hasDiag ? diagP : 0),
+    xT: xT, jami: xT + zT + aT + (hasDiag ? diagP : 0),
     status: status, tolov: '', nakType: 'full',
     ts: Date.now(),
     hist: [{s: status, t: new Date().toLocaleString('uz-UZ'), rol: currentRole}]
   };
 
   orders.unshift(order);
+  custA=[]; custX=[]; custZ=[]; selX=[];
   save();
 
   var btn = document.getElementById('sbtn');
@@ -1838,8 +1903,9 @@ function openDet(id) {
       '<div style="margin-top:10px;margin-bottom:6px;font-size:11px;font-weight:900;color:var(--muted);text-transform:uppercase;">Tanlangan xizmatlar</div>' +
       (o.xizmatlar||[]).map(function(x, xi) {
         return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">' +
-          '<span style="font-size:13px;font-weight:700;">'+x.name+'</span>' +
-          '<div style="display:flex;align-items:center;gap:8px;">' +
+          '<div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;"><span style="font-size:13px;font-weight:700;">'+x.name+'</span>' +
+          '<input value="'+(x.usta||'')+'" placeholder="Usta ismi" onchange="saveServiceUsta(\''+id+'\','+xi+',this.value)" style="max-width:180px;padding:5px 8px;font-size:11px;border:1px solid var(--border);border-radius:7px;"></div>' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">' +
             '<span style="font-family:monospace;font-size:13px;color:var(--gd);">'+fmt(x.price)+'</span>' +
             '<button data-oid="'+id+'" data-xi="'+xi+'" onclick="removeX(this)" style="background:#ffebee;border:none;color:var(--red);width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:900;line-height:1;">x</button>' +
           '</div>' +
@@ -1858,6 +1924,12 @@ function openDet(id) {
       '<input id="det-cx-p" type="number" placeholder="Narx" style="width:95px;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-family:Nunito,sans-serif;background:var(--bg);">' +
       '<button data-oid="'+id+'" onclick="addCustomX(this)" style="padding:9px 14px;background:var(--gl);color:var(--gd);border:2px solid var(--g);border-radius:9px;font-family:Nunito,sans-serif;font-size:13px;font-weight:800;cursor:pointer;">+</button>' +
     '</div>';
+
+    // Aktivatsiya alohida bo‘limi (usta xizmatiga qo‘shilmaydi)
+    var addedA = (o.aktivatsiyalar||[]).length ? (o.aktivatsiyalar||[]).map(function(a,ai){
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #D7CCFF;gap:8px;"><span style="font-size:13px;font-weight:700;flex:1;">💻 '+a.name+'</span><span style="font-family:monospace;color:#6A1B9A;">'+fmt(a.price)+'</span><button data-oid="'+id+'" data-ai="'+ai+'" onclick="removeA(this)" style="background:#F3E5F5;border:0;color:#6A1B9A;border-radius:6px;padding:4px 8px;">×</button></div>';
+    }).join('') : '';
+    var activationRow = '<div style="margin-top:14px;padding-top:12px;border-top:2px dashed #D7CCFF;"><div style="font-size:11px;font-weight:900;color:#6A1B9A;text-transform:uppercase;margin-bottom:8px;">💻 Aktivatsiya</div>'+addedA+'<div style="display:flex;gap:6px;flex-wrap:wrap;"><input id="det-an" placeholder="Aktivatsiya nomi" style="flex:1;min-width:130px;padding:9px;border:2px solid #D7CCFF;border-radius:9px;"><input id="det-ap" type="number" placeholder="Narxi" style="width:120px;padding:9px;border:2px solid #D7CCFF;border-radius:9px;"><button data-oid="'+id+'" onclick="addActivationDetail(this)" style="padding:8px 12px;background:#F3E5F5;color:#6A1B9A;border:2px solid #B39DDB;border-radius:9px;font-weight:800;">+</button></div></div>';
 
     // Zapchastlar bloki
     var addedZ = (o.zapchastlar||[]).length ?
@@ -1886,9 +1958,11 @@ function openDet(id) {
     var xizmatSum = (o.xizmatlar||[]).reduce(function(s,x){return s+(x.price||0);},0);
     var zSum = (o.zapchastlar||[]).reduce(function(s,z){return s+(z.price||0);},0);
     var diagSum = o.hasDiag ? (o.diagP||diagP) : 0;
+    var activationSum = (o.aktivatsiyalar||[]).reduce(function(s,a){return s+(a.price||0);},0);
     var jamiSumHtml = '';
     if (xizmatSum > 0) jamiSumHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.8);margin-bottom:3px;"><span>🔧 Usta haqqi</span><span style="font-family:monospace;">'+fmt(xizmatSum)+' som</span></div>';
     if (zSum > 0) jamiSumHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.8);margin-bottom:3px;"><span>⚙️ Zapchastlar</span><span style="font-family:monospace;">'+fmt(zSum)+' som</span></div>';
+    if (activationSum > 0) jamiSumHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.8);margin-bottom:3px;"><span>💻 Aktivatsiya</span><span style="font-family:monospace;">'+fmt(activationSum)+' som</span></div>';
     if (diagSum > 0) jamiSumHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;color:rgba(255,255,255,.8);margin-bottom:3px;"><span>🔍 Diagnostika</span><span style="font-family:monospace;">'+fmt(diagSum)+' som</span></div>';
 
     var totalRow = '<div style="background:linear-gradient(120deg,#007A2F,#00C853);border-radius:10px;padding:13px 16px;margin-top:12px;">' +
@@ -1907,6 +1981,7 @@ function openDet(id) {
       customRow +
       addedX +
       zapchastRow +
+      activationRow +
       totalRow +
       izohRow +
     '</div>';
