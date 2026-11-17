@@ -793,18 +793,42 @@ function setH(mode) {
   if (active) { active.style.background = 'var(--gd)'; active.style.color = '#fff'; }
   renderStats();
 }
+function parsePaymentDate(value) {
+  if (!value) return null;
+  var d = new Date(value);
+  if (!isNaN(d.getTime())) return d;
+  // Eski tizim sanani uz-UZ formatida, masalan 18.11.2026, saqlagan.
+  var m = String(value).match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})(?:[, ]+(.+))?/);
+  if (!m) return null;
+  var time = (m[4] || '00:00').trim();
+  var tm = time.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]), tm?Number(tm[1]):0, tm?Number(tm[2]):0, tm&&tm[3]?Number(tm[3]):0);
+}
 function paymentEvents(o) {
-  return (o.hist || []).filter(function(h){ return h && h.payment && Number(h.amount) > 0; }).map(function(h){
+  var hist = o.hist || [];
+  var recorded = hist.filter(function(h){ return h && h.payment && Number(h.amount) > 0; }).map(function(h){
     return {amount:Number(h.amount), type:h.type || 'Naqd', date:h.paidAt || h.t || '', role:h.rol || ''};
   });
+  // Eski versiyada to'lov summasi alohida yozilmagan: faqat Tolandi holati,
+  // to'lov turi va tarix vaqti saqlangan. Bunday buyurtmaga jami summani
+  // faqat tarixda aniq Tolandi hodisasi bo'lsa bir marta bog'laymiz.
+  if (!recorded.length && (o.status === 'Tolandi' || o.status === 'BekorTolandi')) {
+    var legacy = hist.filter(function(h){ return h && /^(Tolandi|BekorTolandi)\s*[-–]/.test(String(h.s || '')); });
+    if (legacy.length) {
+      var h = legacy[legacy.length-1];
+      var amount = Number(o.jami || 0);
+      if (amount > 0) recorded.push({amount:amount, type:(String(h.s).split(/[-–]/)[1] || o.tolov || 'Naqd').trim(), date:h.t || '', role:h.rol || '', legacy:true});
+    }
+  }
+  return recorded;
 }
 function paymentSum(o) {
   return paymentEvents(o).reduce(function(sum,p){ return sum + p.amount; }, 0);
 }
 function paymentInPeriod(o, mode, now) {
   return paymentEvents(o).filter(function(p){
-    var d = new Date(p.date);
-    if (isNaN(d.getTime())) return false;
+    var d = parsePaymentDate(p.date);
+    if (!d || isNaN(d.getTime())) return false;
     if (mode === 'today') return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
     if (mode === 'month') return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
     return true;
