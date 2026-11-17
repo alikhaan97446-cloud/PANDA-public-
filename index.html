@@ -834,6 +834,32 @@ function paymentInPeriod(o, mode, now) {
     return true;
   });
 }
+
+function openKassaDetails() {
+  var now = new Date();
+  var rows = [];
+  orders.forEach(function(o) {
+    paymentInPeriod(o, hMode, now).forEach(function(p) {
+      rows.push({date:p.date, order:o.id, type:p.type || 'Naqd', amount:Number(p.amount)||0});
+    });
+  });
+  rows.sort(function(a,b){ return (parsePaymentDate(a.date)||0) - (parsePaymentDate(b.date)||0); });
+  var total = rows.reduce(function(sum,p){return sum+p.amount;},0);
+  var totalEl=document.getElementById('kassa-details-total');
+  var body=document.getElementById('kassa-details-rows');
+  var empty=document.getElementById('kassa-details-empty');
+  if(totalEl) totalEl.textContent='Jami: '+fmt(total)+' so‘m';
+  if(body) body.innerHTML=rows.map(function(p){
+    var d=parsePaymentDate(p.date);
+    var dateText=d&&!isNaN(d.getTime())?d.toLocaleDateString('uz-UZ')+(d.getHours()||d.getMinutes()?' '+d.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'}):''):String(p.date||'—');
+    return '<tr style="border-bottom:1px solid var(--border);"><td style="padding:10px;white-space:nowrap;">'+dateText+'</td><td style="padding:10px;">#'+String(p.order)+'</td><td style="padding:10px;">'+String(p.type)+'</td><td style="padding:10px;text-align:right;font-weight:800;white-space:nowrap;">'+fmt(p.amount)+'</td></tr>';
+  }).join('');
+  if(empty) empty.style.display=rows.length?'none':'block';
+  var modal=document.getElementById('kassa-details-modal');
+  if(modal) modal.style.display='flex';
+}
+function closeKassaDetails(){var modal=document.getElementById('kassa-details-modal');if(modal)modal.style.display='none';}
+
 function renderStats() {
   var el = document.getElementById('hisobot-content');
   if (!el || el.style.display === 'none') return;
@@ -854,7 +880,7 @@ function renderStats() {
   if (sgrd) sgrd.innerHTML =
     '<div class="scard"><div class="sval">'+filtered.length+'</div><div class="slbl">Jami zaявka</div></div>'+
     '<div class="scard"><div class="sval">'+paidOrders.length+'</div><div class="slbl">To‘liq to‘langan</div></div>'+
-    '<div class="scard"><div class="sval">'+fmt(total)+'</div><div class="slbl">Kassaga tushum (som)</div></div>'+
+    '<div class="scard" onclick="openKassaDetails()" style="cursor:pointer;" title="Tushumlar ro‘yxatini ko‘rish"><div class="sval">'+fmt(total)+'</div><div class="slbl">Kassaga tushum (som) · Tafsilot uchun bosing</div></div>'+
     '<div class="scard"><div class="sval">'+orders.filter(function(o){return o.status==='Jarayonda';}).length+'</div><div class="slbl">Jarayonda</div></div>';
 
   var tMap = {};
@@ -2259,5 +2285,25 @@ function detOpen2(elId) {
   openDet(id);
 }
 </script>
+
+<!-- KASSA TUSHUMLARI TAFSILOTI -->
+<div id="kassa-details-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:900;align-items:center;justify-content:center;padding:14px;">
+  <div style="background:var(--bg);border-radius:16px;padding:18px;width:100%;max-width:760px;max-height:85vh;overflow:auto;box-shadow:0 18px 50px rgba(0,0,0,.3);">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="font-size:16px;font-weight:900;">💰 Kassa tushumlari tafsiloti</div>
+      <button onclick="closeKassaDetails()" style="border:0;background:var(--gl);color:var(--gd);border-radius:9px;padding:8px 12px;font-weight:800;cursor:pointer;">✕ Yopish</button>
+    </div>
+    <div id="kassa-details-total" style="font-weight:900;font-size:20px;color:var(--gd);margin-bottom:12px;"></div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:480px;">
+        <thead><tr style="background:var(--gl);text-align:left;"><th style="padding:10px;">Sana</th><th style="padding:10px;">Buyurtma</th><th style="padding:10px;">To‘lov turi</th><th style="padding:10px;text-align:right;">Summa</th></tr></thead>
+        <tbody id="kassa-details-rows"></tbody>
+      </table>
+    </div>
+    <div id="kassa-details-empty" style="display:none;color:var(--muted);padding:18px 4px;">Tanlangan davrda to‘lovlar topilmadi.</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:12px;">Buyurtma tafsilotlarini ko‘rish uchun «Zayavkalar» bo‘limidan buyurtma raqamini qidiring.</div>
+  </div>
+</div>
+
 </body>
 </html>
