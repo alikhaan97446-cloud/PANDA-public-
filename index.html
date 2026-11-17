@@ -1100,7 +1100,7 @@ function openNak(o) {
   var aArr = isDiag?[]:(o.aktivatsiyalar||[]);
   rows += aArr.map(function(a,i){
     return '<tr style="background:#F3E5F5"><td style="padding:2mm 3mm;text-align:center;color:#6A1B9A;border-bottom:1px solid #D7CCFF">'+(xArr.length+i+1)+'</td>'
-      +'<td style="padding:2mm 3mm;font-size:9pt;font-weight:700;color:#6A1B9A;border-bottom:1px solid #D7CCFF">💻 '+a.name+'<br><small>To‘langan: '+fmt(a.paid||0)+' som</small></td>'
+      +'<td style="padding:2mm 3mm;font-size:9pt;font-weight:700;color:#6A1B9A;border-bottom:1px solid #D7CCFF">💻 '+a.name+'</td>'
       +'<td style="padding:2mm 3mm;font-size:9pt;text-align:right;font-family:monospace;color:#6A1B9A;border-bottom:1px solid #D7CCFF">'+fmt(a.price)+' som</td></tr>';
   }).join('');
   // Zapchastlar rows
@@ -1691,7 +1691,7 @@ function calcT() {
 }
 
 function addA() {
-  custA.push({name:'',price:0,paid:0});
+  custA.push({name:'',price:0});
   renderA();
 }
 function renderA() {
@@ -1699,8 +1699,7 @@ function renderA() {
   el.innerHTML=custA.map(function(a,i){
     return '<div class="crow" style="border-color:#D7CCFF;flex-wrap:wrap;">'+
       '<input placeholder="Aktivatsiya nomi" value="'+(a.name||'')+'" oninput="custA['+i+'].name=this.value;calcT()" style="flex:1;min-width:130px;">'+
-      '<input type="number" placeholder="Umumiy narx" value="'+(a.price||'')+'" oninput="custA['+i+'].price=+this.value||0;calcT()" class="pi">'+
-      '<input type="number" placeholder="To‘langan (ixtiyoriy)" value="'+(a.paid||'')+'" oninput="custA['+i+'].paid=+this.value||0;calcT()" class="pi">'+
+      '<input type="number" placeholder="Narxi" value="'+(a.price||'')+'" oninput="custA['+i+'].price=+this.value||0;calcT()" class="pi">'+
       '<button class="rmv" onclick="custA.splice('+i+',1);renderA()">×</button></div>';
   }).join(''); calcT();
 }
