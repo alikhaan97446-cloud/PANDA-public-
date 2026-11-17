@@ -1093,7 +1093,7 @@ function openNak(o) {
   var zArr = isDiag?[]:(o.zapchastlar||[]);
   var rows = xArr.map(function(x,i){
     return '<tr><td style="padding:2mm 3mm;text-align:center;color:#999;border-bottom:1px solid #f0f0f0">'+(i+1)+'</td>'
-      +'<td style="padding:2mm 3mm;font-size:9pt;font-weight:700;border-bottom:1px solid #f0f0f0">🔧 '+x.name+'</td>'
+      +'<td style="padding:2mm 3mm;font-size:9pt;font-weight:700;border-bottom:1px solid #f0f0f0">🔧 '+x.name+(x.usta?'<small style="display:block;font-size:7.5pt;color:#666;font-weight:600;margin-top:1mm;">Usta: '+x.usta+'</small>':'<small style="display:block;font-size:7.5pt;color:#999;font-weight:600;margin-top:1mm;">Usta: ko‘rsatilmagan</small>')+'</td>'
       +'<td style="padding:2mm 3mm;font-size:9pt;text-align:right;font-family:monospace;border-bottom:1px solid #f0f0f0">'+fmt(x.price)+' som</td></tr>';
   }).join('');
   // Aktivatsiya rows - xizmat va zapchastdan alohida
@@ -1192,8 +1192,8 @@ function openNak(o) {
         +'</svg>'
       +'</div>'
     +'</div>'
-    +(o.izoh?('<div style="margin:2mm 5mm;padding:3mm 4mm;background:#f9f9f9;border-radius:8px;border-left:4px solid #FFB800"><p style="font-size:7pt;color:#999;font-weight:800;text-transform:uppercase;margin:0 0 1mm 0">Izoh</p><p style="font-size:9pt;font-weight:700;color:#1a1a1a;margin:0">'+o.izoh+'</p></div>'):'')+
-    +'<div style="margin:2mm 5mm;padding:3mm 4mm;border:2px solid #FFB800;border-radius:8px;background:#FFFDE7">'
+    +(o.izoh?('<div style="margin:2mm 5mm;padding:3mm 4px;background:#f9f9f9;border-radius:8px;border-left:4px solid #FFB800"><p style="font-size:7pt;color:#999;font-weight:800;text-transform:uppercase;margin:0 0 1mm 0">Izoh</p><p style="font-size:9pt;font-weight:700;color:#1a1a1a;margin:0">'+o.izoh+'</p></div>'):'')+
+    '<div style="margin:2mm 5mm;padding:3mm 4mm;border:2px solid #FFB800;border-radius:8px;background:#FFFDE7">'
       +'<p style="font-size:9.5pt;font-weight:900;color:#1a1a1a;text-align:center;margin:0 0 2mm 0">&#9989; BAJARILGAN XIZMATLAR UCHUN KAFOLAT BERILADI</p>'
       +'<p style="font-size:7pt;color:#666;text-align:center;line-height:1.5;margin:0">&#9888; Eslatma: Zapchastlar uchun va tabiiy ofatlar natijasida yuzaga kelgan nosozliklar uchun servis javobgar emas.</p>'
     +'</div>'
@@ -1770,7 +1770,7 @@ function submitO() {
 
   var allX = isOp ? selX.map(function(i){return {name:xizmatlar[i].name,price:xizmatlar[i].price,usta:''};}).concat(custX.filter(function(x){return x.name;}).map(function(x){return {name:x.name,price:x.price||0,usta:x.usta||''};})) : [];
   var allZ = custZ.filter(function(z){return z.name;}).map(function(z){return {name:z.name,price:z.price||0};});
-  var allA = custA.filter(function(a){return a.name;}).map(function(a){return {name:a.name,price:a.price||0,paid:a.paid||0};});
+  var allA = custA.filter(function(a){return a.name;}).map(function(a){return {name:a.name,price:a.price||0};});
 
   var xT = allX.reduce(function(s,x){return s+x.price;},0);
   var zT = allZ.reduce(function(s,z){return s+z.price;},0);
